@@ -14,6 +14,6 @@
 ## Executando o backend
 
 - Acesse a pasta "backend"
-    - pip install
+    - pip install -r requirements.txt
     - uvicorn main:app
 

@@ -1,7 +1,6 @@
 <template>
   <div>
     <input type="file" @change="uploadArquivo">
-    <!--<upload-archive/>-->
     <h1>Listagem de Pacotes</h1>
     <ul>
       <li v-for="pacote in pacotes" :key="pacote.timestamp">
@@ -29,13 +28,9 @@
 <script>
 import axios from "axios";
 import { Chart } from "chart.js";
-// import UploadArchive from '@/components/UploadArchive.vue';
 
 export default {
   name: 'GraphicsPage',
-  components: {
-    // UploadArchive,
-  },
   data() {
     return {
       pacotes: []

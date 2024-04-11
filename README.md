@@ -1,19 +1,23 @@
-# Frontend
+# Network Packet Analyzer
 
-- Instalar o vue 3
+## Frontend
 
-## Executando o frontend
-- Acesse a pasta "frontend"
-    - npm install
-    - npm run serve
+### Executando o frontend
+- Acesse a pasta ./frontend e execute:
+    ```bash
+    $ npm install
+    $ npm run serve
+    ```
 
-# Backend
+## Backend
 
-- Instalar o Python (pip)
+- Instale o Python (pip)
 
-## Executando o backend
+### Executando o backend
 
-- Acesse a pasta "backend"
-    - pip install -r requirements.txt
-    - uvicorn main:app
+- Acesse o diretório ./backend e execute:
+    ```bash
+    $ pip install
+    $ uvicorn main:app
+    ```
 

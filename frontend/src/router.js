@@ -1,9 +1,9 @@
 import { createMemoryHistory, createRouter } from 'vue-router'
 
-import GraphicsPage from '@/components/GraphicsPage.vue'
+import ListPackages from '@/components/ListPackages.vue'
 
 const routes = [
-  { path: '/', component: GraphicsPage },
+  { path: '/', component: ListPackages },
 ]
 
 const router = createRouter({

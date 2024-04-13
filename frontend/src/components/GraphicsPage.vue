@@ -1,13 +1,18 @@
 <template>
-  <div>
+  <div class="chart-container">
     <!-- Gráfico de IP de Origem -->
-    <canvas id="grafico-ip-origem"></canvas>
+    <div class="chart">
+      <h2 class="chart-title">Ocorrências de IP de Origem</h2>
+      <canvas id="grafico-ip-origem"></canvas>
+    </div>
 
     <!-- Gráfico de IP de Destino -->
-    <canvas id="grafico-ip-destino"></canvas>
+    <div class="chart">
+      <h2 class="chart-title">Ocorrências de IP de Destino</h2>
+      <canvas id="grafico-ip-destino"></canvas>
+    </div>
   </div>
 </template>
-
 <script>
 import { Chart } from "chart.js";
 
@@ -117,4 +122,24 @@ export default {
 </script>
 
 <style scoped>
+.chart-container {
+  display: flex;
+}
+
+.chart {
+  flex: 1;
+  margin-right: 10px;
+}
+
+.chart:last-child {
+  margin-right: 0;
+}
+
+.chart-title {
+  text-align: center;
+  margin-top: 10px;
+  font-size: 16px;
+  color: #333;
+  text-transform: uppercase;
+}
 </style>

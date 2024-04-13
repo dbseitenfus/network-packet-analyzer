@@ -61,3 +61,12 @@ async def contar_ip(endereco_ip: str):
     contador = Counter([pacote["ip_origem"] for pacote in pacotes])
 
     return {"endereco_ip": endereco_ip, "ocorrencias": contador[endereco_ip]}
+
+@app.get("/listar_enderecos_ip")
+async def listar_enderecos_ip():
+    global pacotes
+
+    # Extrair endereços IP únicos da lista de pacotes
+    enderecos_ip_unicos = set(pacote["ip_origem"] for pacote in pacotes)
+
+    return {"enderecos_ip": list(enderecos_ip_unicos)}

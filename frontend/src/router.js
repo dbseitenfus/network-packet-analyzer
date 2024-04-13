@@ -1,9 +1,9 @@
 import { createMemoryHistory, createRouter } from 'vue-router'
 
-import ListPackages from '@/components/ListPackages.vue'
+import DashboardPackages from '@/components/DashboardPackages.vue'
 
 const routes = [
-  { path: '/', component: ListPackages },
+  { path: '/', component: DashboardPackages },
 ]
 
 const router = createRouter({

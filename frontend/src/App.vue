@@ -1,14 +1,19 @@
 <template>
-  <div id="app">
-    <router-link to="/">Home</router-link> <!-- Adicione um link para a página inicial -->
-    <router-link to="/about">About</router-link> <!-- Adicione um link para a página "About" -->
-    <router-view /> <!-- Aqui serão renderizados os componentes correspondentes às rotas -->
-  </div>
+  <!-- <div id="app">
+    <router-link to="/">Dashboard</router-link>
+    <router-link to="/list_package">Pacotes</router-link>
+    <router-view />
+  </div> -->
+  <dashboard-packages/>
 </template>
 
 <script>
+import DashboardPackages from './components/DashboardPackages.vue'
+
 export default {
-  name: 'App'
+  components: { DashboardPackages },
+  name: 'App',
+
 }
 </script>
 

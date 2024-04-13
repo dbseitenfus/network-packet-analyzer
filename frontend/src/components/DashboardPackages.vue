@@ -1,30 +1,35 @@
 <template>
   <div>
-    <label for="fileInput" class="float-button upload-button">Selecionar Arquivo</label>
+    <label for="fileInput" class="float-button btn-floating">
+      <div class="icon-container">
+        <n-icon size="24">
+          <cloud-upload/>
+        </n-icon>
+      </div>
+    </label>
     <input id="fileInput" ref="fileInput" type="file" style="display: none" @change="uploadArquivo">
-    <h1>Listagem de pacotes</h1>
-    <ul>
-      <li v-for="pacote in pacotes" :key="pacote.timestamp">
-        <p>Timestamp: {{ pacote.timestamp }}</p>
-        <p>MAC de Origem: {{ pacote.mac_origem }}</p>
-        <p>MAC de Destino: {{ pacote.mac_destino }}</p>
-        <p>IP de Origem: {{ pacote.ip_origem }}</p>
-        <p>IP de Destino: {{ pacote.ip_destino }}</p>
-        <p>Protocolo: {{ pacote.protocolo }}</p>
-        <p>Tipo de Ethernet: {{ pacote.tipo_ethernet }}</p>
-      </li>
-    </ul>
+    <graphics-page :pacotes="pacotes"/>
+    <!-- <histogram-address :enderecosIP="enderecosIP" v-if="enderecosIP.length > 0"/> -->
   </div>
 </template>
 
 <script>
 import axios from "axios";
+import GraphicsPage from './GraphicsPage.vue';
+import { NIcon } from "naive-ui";
+import { CloudUpload } from "@vicons/ionicons5";
 
 export default {
-  name: 'ListPackages',
+  name: 'DashboardPackages',
+  components: {
+    GraphicsPage,
+    NIcon,
+    CloudUpload,
+  },
   data() {
     return {
-      pacotes: []
+      pacotes: [],
+      enderecosIP: [],
     };
   },
   methods: {
@@ -45,7 +50,18 @@ export default {
       } catch (error) {
         console.error("Erro ao enviar arquivo:", error);
       }
+    },
+    async listarEnderecosIP() {
+      try {
+        const response = await axios.get("http://localhost:8000/listar_enderecos_ip");
+        this.enderecosIP = response.data.enderecos_ip;
+      } catch (error) {
+        console.error("Erro ao listar endereços IP:", error);
+      }
     }
+  },
+  mounted() {
+    this.listarEnderecosIP();
   }
 };
 </script>
@@ -70,17 +86,11 @@ export default {
   box-shadow: 0px 0px 5px rgba(112, 106, 106, 0.5);
 }
 
-.upload-button {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  background-color: #232343;
-  color: white;
-  border: none;
-  border-radius: 50px;
-  padding: 15px 25px;
-  font-size: 16px;
-  cursor: pointer;
-  box-shadow: 0px 0px 5px rgba(112, 106, 106, 0.5);
+.icon-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
 }
 </style>

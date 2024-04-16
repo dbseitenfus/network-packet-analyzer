@@ -9,6 +9,7 @@
     </label>
     <input id="fileInput" ref="fileInput" type="file" style="display: none" @change="uploadArquivo">
     <graphics-page :pacotes="pacotes"/>
+    <graph-test :pacotes="pacotes" />
     <!-- <histogram-address :enderecosIP="enderecosIP" v-if="enderecosIP.length > 0"/> -->
   </div>
 </template>
@@ -18,6 +19,7 @@ import axios from "axios";
 import GraphicsPage from './GraphicsPage.vue';
 import { NIcon } from "naive-ui";
 import { CloudUpload } from "@vicons/ionicons5";
+import GraphTest from "./GraphTest.vue";
 
 export default {
   name: 'DashboardPackages',
@@ -25,6 +27,7 @@ export default {
     GraphicsPage,
     NIcon,
     CloudUpload,
+    GraphTest
   },
   data() {
     return {

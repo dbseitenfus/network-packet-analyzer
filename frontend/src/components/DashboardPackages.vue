@@ -8,26 +8,31 @@
       </div>
     </label>
     <input id="fileInput" ref="fileInput" type="file" style="display: none" @change="uploadArquivo">
-    <graphics-page :pacotes="pacotes"/>
-    <graph-test :pacotes="pacotes" />
+    <!-- <graphics-page :pacotes="pacotes"/> -->
+    <div class="graph-container">
+      <graph-test :pacotes="pacotes" v-show="false"/>
+      <test-auto-graph  :pacotes="pacotes" />
+    </div>
     <!-- <histogram-address :enderecosIP="enderecosIP" v-if="enderecosIP.length > 0"/> -->
   </div>
 </template>
 
 <script>
 import axios from "axios";
-import GraphicsPage from './GraphicsPage.vue';
+// import GraphicsPage from './GraphicsPage.vue';
 import { NIcon } from "naive-ui";
 import { CloudUpload } from "@vicons/ionicons5";
 import GraphTest from "./GraphTest.vue";
+import TestAutoGraph from "./TestAutoGraph.vue";
 
 export default {
   name: 'DashboardPackages',
   components: {
-    GraphicsPage,
+    // GraphicsPage,
     NIcon,
     CloudUpload,
-    GraphTest
+    GraphTest,
+    TestAutoGraph
   },
   data() {
     return {
@@ -95,5 +100,11 @@ export default {
   align-items: center;
   width: 100%;
   height: 100%;
+}
+
+.graph-container {
+  width: 100vw; /* Largura igual à largura da tela */
+  height: 100vh; /* Altura igual à altura da tela */
+  background-color: bisque;
 }
 </style>

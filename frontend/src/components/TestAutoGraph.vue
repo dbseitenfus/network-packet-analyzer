@@ -130,7 +130,7 @@ export default {
             console.log("pacote ", index);
             var nodeIndex = index + 1;
             const nodeName = `node${nodeIndex}`;
-            this.nodes[nodeName] = { name: ip, edgeWidth: 1, hue: 100 };
+            this.nodes[nodeName] = { name: ip, edgeWidth: 1, hue: hues[Math.floor(Math.random() * hues.length)] };
         });
       
         console.log("gerando os pacotes...");
@@ -141,7 +141,7 @@ export default {
             var targetNodeIndex = this.pacotes.findIndex(p => p.ip_origem === pacote.ip_destino) + 1;
             var targetNodeName = `node${targetNodeIndex}`;
             var edgeName = `edge${index + 1}`;
-            this.edges[edgeName] = { source: sourceNodeName, target: targetNodeName, edgeWidth: 1, hue: 100 };
+            this.edges[edgeName] = { source: sourceNodeName, target: targetNodeName, edgeWidth: 1, hue: hues[Math.floor(Math.random() * hues.length)] };
         });
         
 

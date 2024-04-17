@@ -17,11 +17,6 @@
         />
       </template>
     </v-network-graph>
-
-    <label class="switch">
-      <input type="checkbox" v-model="testCaseCondition" />
-      <span>Toggle: On node hover change edge style</span>
-    </label>
   </div>
 </template>
 
@@ -51,10 +46,6 @@ export default {
       },
       deep: true
     }
-  },
-
-  mounted() {
-    this.generateNodes();
   },
 
   computed: {
@@ -126,6 +117,9 @@ export default {
     generateNodes() {
       this.generateIps();
 
+      this.nodes = []
+      this.edges = []
+
       this.ips.forEach((ip, index) => {
             console.log("pacote ", index);
             var nodeIndex = index + 1;
@@ -143,10 +137,6 @@ export default {
             var edgeName = `edge${index + 1}`;
             this.edges[edgeName] = { source: sourceNodeName, target: targetNodeName, edgeWidth: 1, hue: hues[Math.floor(Math.random() * hues.length)] };
         });
-        
-
-    // Criando as arestas com base nos nós de origem e destino
-
     },
   },
 };

@@ -140,15 +140,15 @@ export default {
 .graphics {
   position: absolute;
   background-color: #fff;
-  top: 0;
-  right: 0;
-  margin: 20px;
+  top: 20px; /* Margem superior */
+  right: 20px; /* Margem direita */
+  width: 300px; /* Largura do .graphics */
+  height: calc(100vh - 40px); /* Tamanho da tela menos as margens superior e inferior */
 }
 
 .graph {
-  width: 75vw !important;
-  height: 100vh !important;
-  top: 0;
-  right: 0;
+  width: calc(100% - 320px); /* Largura do .graph é o restante do espaço disponível */
+  height: 100%;
+  background-color: aquamarine;
 }
 </style>

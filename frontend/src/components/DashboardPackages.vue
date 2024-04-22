@@ -9,7 +9,7 @@
     </label>
     <input id="fileInput" ref="fileInput" type="file" style="display: none" @change="uploadArquivo">
     <div class="graph-container">
-      <network-graph :pacotes="pacotes" />
+      <network-graph class="graph" :pacotes="pacotes" />
       <graphics-page class="graphics" :pacotes="pacotes"/>
     </div>
   </div>
@@ -143,5 +143,12 @@ export default {
   top: 0;
   right: 0;
   margin: 20px;
+}
+
+.graph {
+  width: 75vw !important;
+  height: 100vh !important;
+  top: 0;
+  right: 0;
 }
 </style>

@@ -150,11 +150,11 @@ body {
   font-family: sans-serif;
 }
 
-.graph,
+/* .graph,
 .v-network-graph > svg {
   width: 100vw !important;
   height: 100vh !important;
-}
+} */
 
 .switch {
   position: fixed;

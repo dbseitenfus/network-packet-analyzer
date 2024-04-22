@@ -83,19 +83,16 @@ async def listar_pacotes(pcap_file: UploadFile = File(...)):
         # Decodificar o pacote Ethernet
         pacote_eth = dpkt.ethernet.Ethernet(buf)
 
-        # Verificar se o pacote é do tipo IPv4
-        if isinstance(pacote_eth.data, dpkt.ip.IP):
-            ip = pacote_eth.data
+        print(pacote_eth.arp)
 
-            # Adicionar informações do pacote à lista
-            pacotes.append({
-                "timestamp": timestamp,
-                # "ip_origem": dpkt.utils.inet_to_str(ip.src),
-                # "ip_destino": dpkt.utils.inet_to_str(ip.dst),
-                # "mac_origem": ":".join("{:02x}".format(b) for b in pacote_eth.src),
-                # "mac_destino": ":".join("{:02x}".format(b) for b in pacote_eth.dst),
-                # "protocolo": ip.p,
-                # "tipo_ethernet": pacote_eth.type
-            })
+        pacotes.append({
+            "timestamp": timestamp,
+            # "ip_origem": dpkt.utils.inet_to_str(ip.src),
+            # "ip_destino": dpkt.utils.inet_to_str(ip.dst),
+            # "mac_origem": ":".join("{:02x}".format(b) for b in pacote_eth.src),
+            # "mac_destino": ":".join("{:02x}".format(b) for b in pacote_eth.dst),
+            # "protocolo": ip.p,
+            # "tipo_ethernet": pacote_eth.type
+        })
 
     return {"mensagem": "Pacotes processados com sucesso", "pacotes": pacotes }

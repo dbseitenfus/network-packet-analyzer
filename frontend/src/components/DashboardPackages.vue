@@ -18,17 +18,17 @@
 <script>
 import axios from "axios";
 import GraphicsPage from './GraphicsPage.vue';
+import NetworkGraph from "./NetworkGraph.vue";
 import { NIcon } from "naive-ui";
 import { CloudUpload } from "@vicons/ionicons5";
-import NetworkGraph from "./NetworkGraph.vue";
 
 export default {
   name: 'DashboardPackages',
   components: {
     GraphicsPage,
+    NetworkGraph,
     NIcon,
     CloudUpload,
-    NetworkGraph
   },
   data() {
     return {
@@ -123,12 +123,6 @@ export default {
   height: 100%;
 }
 
-.page {
-  width: 100vw;
-  height: 100vh;
-  background-color: #eee;
-}
-
 .graph-container {
   position: relative;
   width: 100%; 
@@ -140,15 +134,15 @@ export default {
 .graphics {
   position: absolute;
   background-color: #fff;
-  top: 20px; /* Margem superior */
-  right: 20px; /* Margem direita */
-  width: 300px; /* Largura do .graphics */
-  height: calc(100vh - 40px); /* Tamanho da tela menos as margens superior e inferior */
+  top: 20px; 
+  right: 20px;
+  width: 400px; 
+  height: calc(100vh - 40px);
 }
 
 .graph {
-  width: calc(100% - 320px); /* Largura do .graph é o restante do espaço disponível */
-  height: 100%;
-  background-color: aquamarine;
+  width: calc(100% - 420px);
+  height: 100vh;
+  background-color: aqua;
 }
 </style>

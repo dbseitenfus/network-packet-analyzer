@@ -124,15 +124,11 @@ export default {
 <style scoped>
 .chart-container {
   display: flex;
+  flex-direction: column; 
 }
 
 .chart {
-  flex: 1;
-  margin-right: 10px;
-}
-
-.chart:last-child {
-  margin-right: 0;
+  margin-bottom: 50px;
 }
 
 .chart-title {

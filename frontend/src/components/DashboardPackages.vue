@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="page">
     <label for="fileInput" class="float-button btn-floating">
       <div class="icon-container">
         <n-icon size="24">
@@ -8,9 +8,9 @@
       </div>
     </label>
     <input id="fileInput" ref="fileInput" type="file" style="display: none" @change="uploadArquivo">
-    <graphics-page :pacotes="pacotes"/>
     <div class="graph-container">
-      <network-graph  :pacotes="pacotes" />
+      <network-graph :pacotes="pacotes" />
+      <graphics-page class="graphics" :pacotes="pacotes"/>
     </div>
   </div>
 </template>
@@ -98,9 +98,25 @@ export default {
   height: 100%;
 }
 
+.page {
+  width: 100vw;
+  height: 100vh;
+  background-color: #eee;
+}
+
 .graph-container {
-  width: 100vw; /* Largura igual à largura da tela */
-  height: 100vh; /* Altura igual à altura da tela */
-  background-color:#D4F3FA;
+  position: relative;
+  width: 100%; 
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.graphics {
+  position: absolute;
+  background-color: #fff;
+  top: 0;
+  right: 0;
+  margin: 20px;
 }
 </style>

@@ -1,9 +1,4 @@
 <template>
-  <!-- <div id="app">
-    <router-link to="/">Dashboard</router-link>
-    <router-link to="/list_package">Pacotes</router-link>
-    <router-view />
-  </div> -->
   <dashboard-packages/>
 </template>
 

@@ -10,8 +10,7 @@
     <input id="fileInput" ref="fileInput" type="file" style="display: none" @change="uploadArquivo">
     <graphics-page :pacotes="pacotes"/>
     <div class="graph-container">
-      <graph-test :pacotes="pacotes" v-show="false"/>
-      <test-auto-graph  :pacotes="pacotes" />
+      <network-graph  :pacotes="pacotes" />
     </div>
   </div>
 </template>
@@ -21,8 +20,7 @@ import axios from "axios";
 import GraphicsPage from './GraphicsPage.vue';
 import { NIcon } from "naive-ui";
 import { CloudUpload } from "@vicons/ionicons5";
-import GraphTest from "./GraphTest.vue";
-import TestAutoGraph from "./TestAutoGraph.vue";
+import NetworkGraph from "./NetworkGraph.vue";
 
 export default {
   name: 'DashboardPackages',
@@ -30,8 +28,7 @@ export default {
     GraphicsPage,
     NIcon,
     CloudUpload,
-    GraphTest,
-    TestAutoGraph
+    NetworkGraph
   },
   data() {
     return {
@@ -104,6 +101,6 @@ export default {
 .graph-container {
   width: 100vw; /* Largura igual à largura da tela */
   height: 100vh; /* Altura igual à altura da tela */
-  background-color: bisque;
+  background-color:#D4F3FA;
 }
 </style>

@@ -40,14 +40,17 @@ export default {
     async uploadArquivo(event) {
       const arquivo = event.target.files[0];
       const formData = new FormData();
-      formData.append("arquivo_pcap", arquivo);
+      formData.append("pcap_file", arquivo);
 
       try {
-        const response = await axios.post("http://localhost:8000/listar_pacotes", formData, {
-          headers: {
-            "Content-Type": "multipart/form-data"
-          }
-        });
+        const fileExtension = this.getFileExtension(arquivo.name);
+        var response;
+        if(fileExtension == "pcapng") {
+          response = await this.getIpv4Packets(formData);
+        } else if(fileExtension == "pcap") {
+          response = await this.getArpPackets(formData);
+        }
+         
 
         // Atualiza os pacotes com os dados recebidos
         this.pacotes = response.data.pacotes;
@@ -55,6 +58,28 @@ export default {
         console.error("Erro ao enviar arquivo:", error);
       }
     },
+
+    async getIpv4Packets(formData) {
+      return await axios.post("http://localhost:8000/list_packages", formData, {
+          headers: {
+            "Content-Type": "multipart/form-data"
+          }
+        });
+    },
+
+    async getArpPackets(formData) {
+      return await axios.post("http://localhost:8000/arp/list_packages", formData, {
+          headers: {
+            "Content-Type": "multipart/form-data"
+          }
+        });
+    },
+
+    getFileExtension(fileName) {
+      const array = fileName.split('.');
+      return array.slice(-1);
+    },
+
     async listarEnderecosIP() {
       try {
         const response = await axios.get("http://localhost:8000/listar_enderecos_ip");

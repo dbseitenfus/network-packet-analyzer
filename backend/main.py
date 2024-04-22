@@ -27,11 +27,11 @@ ips_origem = []
 def read_root():
     return {"Hello world"}
 
-@app.post("/listar_pacotes")
-async def listar_pacotes(arquivo_pcap: UploadFile = File(...)):
+@app.post("/list_packages")
+async def listar_pacotes(pcap_file: UploadFile = File(...)):
     global pacotes
     pacotes = []
-    conteudo = await arquivo_pcap.read()
+    conteudo = await pcap_file.read()
     captura = dpkt.pcapng.Reader(io.BytesIO(conteudo))
 
     for timestamp, buf in captura:
@@ -70,3 +70,32 @@ async def listar_enderecos_ip():
     enderecos_ip_unicos = set(pacote["ip_origem"] for pacote in pacotes)
 
     return {"enderecos_ip": list(enderecos_ip_unicos)}
+
+
+@app.post("/arp/list_packages")
+async def listar_pacotes(pcap_file: UploadFile = File(...)):
+    global pacotes
+    pacotes = []
+    conteudo = await pcap_file.read()
+    captura = dpkt.pcap.Reader(io.BytesIO(conteudo))
+
+    for timestamp, buf in captura:
+        # Decodificar o pacote Ethernet
+        pacote_eth = dpkt.ethernet.Ethernet(buf)
+
+        # Verificar se o pacote é do tipo IPv4
+        if isinstance(pacote_eth.data, dpkt.ip.IP):
+            ip = pacote_eth.data
+
+            # Adicionar informações do pacote à lista
+            pacotes.append({
+                "timestamp": timestamp,
+                # "ip_origem": dpkt.utils.inet_to_str(ip.src),
+                # "ip_destino": dpkt.utils.inet_to_str(ip.dst),
+                # "mac_origem": ":".join("{:02x}".format(b) for b in pacote_eth.src),
+                # "mac_destino": ":".join("{:02x}".format(b) for b in pacote_eth.dst),
+                # "protocolo": ip.p,
+                # "tipo_ethernet": pacote_eth.type
+            })
+
+    return {"mensagem": "Pacotes processados com sucesso", "pacotes": pacotes }

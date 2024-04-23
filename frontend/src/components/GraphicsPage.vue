@@ -19,15 +19,18 @@ import { Chart } from "chart.js";
 export default {
   name: 'GraphicsPage',
   props: {
-    pacotes: Array
+    packets: {
+      type: Number,
+      data: Array
+    }
   },
   mounted() {
     this.criarGraficoIP();
   },  
   watch: {
-    pacotes: {
-      handler(newPacotes) {
-        if (newPacotes.length > 0) {
+    packets: {
+      handler(newPackets) {
+        if (newPackets.data.length > 0) {
           this.atualizarGraficos();
         }
       },
@@ -37,8 +40,8 @@ export default {
   methods: {
     criarGraficoIP() {
       // Extrai os endereços IP de origem e destino dos pacotes
-      const ipsOrigem = this.pacotes.map(pacote => pacote.ip_origem);
-      const ipsDestino = this.pacotes.map(pacote => pacote.ip_destino);
+      const ipsOrigem = this.packets.data.map(pacote => pacote.ip_origem);
+      const ipsDestino = this.packets.data.map(pacote => pacote.ip_destino);
 
       // Conta a ocorrência de cada endereço IP
       const contadorOrigem = this.contarOcorrencias(ipsOrigem);
@@ -101,8 +104,8 @@ export default {
     },
     atualizarGraficos() {
       // Atualiza os gráficos com os novos dados
-      const ipsOrigem = this.pacotes.map(pacote => pacote.ip_origem);
-      const ipsDestino = this.pacotes.map(pacote => pacote.ip_destino);
+      const ipsOrigem = this.packets.data.map(pacote => pacote.ip_origem);
+      const ipsDestino = this.packets.data.map(pacote => pacote.ip_destino);
 
       const contadorOrigem = this.contarOcorrencias(ipsOrigem);
       const contadorDestino = this.contarOcorrencias(ipsDestino);

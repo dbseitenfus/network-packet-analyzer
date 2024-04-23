@@ -9,8 +9,8 @@
     </label>
     <input id="fileInput" ref="fileInput" type="file" style="display: none" @change="uploadArquivo">
     <div class="graph-container">
-      <network-graph class="graph" :pacotes="pacotes" />
-      <graphics-page class="graphics" :pacotes="pacotes"/>
+      <network-graph class="graph" :packets="packets" />
+      <graphics-page class="graphics" :packets="packets"/>
     </div>
   </div>
 </template>
@@ -32,7 +32,10 @@ export default {
   },
   data() {
     return {
-      pacotes: [],
+      packets: {
+        type: -1,
+        data: []
+      },
       enderecosIP: [],
     };
   },
@@ -46,14 +49,18 @@ export default {
         const fileExtension = this.getFileExtension(arquivo.name);
         var response;
         if(fileExtension == "pcapng") {
+          this.packets.type = 0;
           response = await this.getIpv4Packets(formData);
         } else if(fileExtension == "pcap") {
+          this.packets.type = 1;
           response = await this.getArpPackets(formData);
-          console.log(response)
+          
         }
 
+        console.log(response)
+
         // Atualiza os pacotes com os dados recebidos
-        this.pacotes = response.data.pacotes;
+        this.packets.data = response.data.pacotes;
       } catch (error) {
         console.error("Erro ao enviar arquivo:", error);
       }

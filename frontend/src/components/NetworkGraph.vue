@@ -112,7 +112,7 @@ export default {
     },
 
     generateIpv4Nodes() {
-      this.generateIps();
+      this.generateIpsList();
 
       this.nodes = []
       this.edges = []

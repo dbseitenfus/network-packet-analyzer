@@ -10,7 +10,7 @@
     <input id="fileInput" ref="fileInput" type="file" style="display: none" @change="uploadArquivo">
     <div class="graph-container">
       <network-graph class="graph" :packets="packets" />
-      <graphics-page class="graphics" :packets="packets"/>
+      <graphics-page class="graphics" :packets="packets" />
     </div>
   </div>
 </template>

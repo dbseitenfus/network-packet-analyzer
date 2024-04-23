@@ -38,7 +38,7 @@ export default {
     }
   },
   methods: {
-    criarGraficoIP() {
+    createGraphicsIPV4(){
       // Extrai os endereços IP de origem e destino dos pacotes
       const ipsOrigem = this.packets.data.map(pacote => pacote.ip_origem);
       const ipsDestino = this.packets.data.map(pacote => pacote.ip_destino);
@@ -95,6 +95,72 @@ export default {
         data: dataDestino,
         options: options
       });
+
+    },
+    createGraphicsARP(){
+      // Extrai os endereços IP de origem e destino dos pacotes
+      const ipsOrigem = this.packets.data.map(pacote => pacote.ip_origem);
+      const ipsDestino = this.packets.data.map(pacote => pacote.ip_destino);
+
+      // Conta a ocorrência de cada endereço IP
+      const contadorOrigem = this.contarOcorrencias(ipsOrigem);
+      const contadorDestino = this.contarOcorrencias(ipsDestino);
+
+      // Dados do gráfico de IP de origem
+      const dataOrigem = {
+        labels: Object.keys(contadorOrigem),
+        datasets: [{
+          label: 'MAC de Origem',
+          backgroundColor: 'rgba(255, 99, 132, 0.5)',
+          borderColor: 'rgba(255, 99, 132, 1)',
+          borderWidth: 1,
+          data: Object.values(contadorOrigem)
+        }]
+      };
+
+      // Dados do gráfico de IP de destino
+      const dataDestino = {
+        labels: Object.keys(contadorDestino),
+        datasets: [{
+          label: 'MAC de Destino',
+          backgroundColor: 'rgba(54, 162, 235, 0.5)',
+          borderColor: 'rgba(54, 162, 235, 1)',
+          borderWidth: 1,
+          data: Object.values(contadorDestino)
+        }]
+      };
+
+      // Opções dos gráficos
+      const options = {
+        scales: {
+          y: {
+            beginAtZero: true
+          }
+        }
+      };
+
+      // Renderiza o gráfico de IP de origem
+      const ctxOrigem = document.getElementById('grafico-ip-origem').getContext('2d');
+      this.chartOrigem = new Chart(ctxOrigem, {
+        type: 'bar',
+        data: dataOrigem,
+        options: options
+      });
+
+      // Renderiza o gráfico de IP de destino
+      const ctxDestino = document.getElementById('grafico-ip-destino').getContext('2d');
+      this.chartDestino = new Chart(ctxDestino, {
+        type: 'bar',
+        data: dataDestino,
+        options: options
+      });
+    },
+    criarGraficoIP() {
+      if(this.packets.type == 0){
+        this.createGraphicsIPV4();
+      }else {
+        this.createGraphicsARP();
+      }
     },
     contarOcorrencias(arr) {
       return arr.reduce((acc, curr) => {

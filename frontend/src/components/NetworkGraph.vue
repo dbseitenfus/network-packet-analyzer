@@ -26,7 +26,7 @@ import { configs } from "./configs";
 
 export default {
   props: {
-    pacotes: Array
+    packets: Object
   },
 
   data: () => ({
@@ -38,9 +38,9 @@ export default {
   }),
 
   watch: {
-    pacotes: {
-      handler(newPacotes) {
-        if (newPacotes.length > 0) {
+    packets: {
+      handler(newPackets) {
+        if (newPackets.data.length > 0) {
           this.generateNodes();
         }
       },
@@ -103,18 +103,15 @@ export default {
       this.$refs[target].style.stroke = color ?? defaultColor;
     },
 
-    generateIps() {
-      const ipsOrigem = this.pacotes.map(pacote => pacote.ip_origem);
-      const ipsDestino = this.pacotes.map(pacote => pacote.ip_destino);
-
-      // Combina os dois arrays
-      const todosIps = [...ipsOrigem, ...ipsDestino];
-
-      // Remove os valores duplicados
-      this.ips = todosIps.filter((ip, index) => todosIps.indexOf(ip) === index);
+    generateNodes() {
+      if(this.packets.type == 0) {
+        this.generateIpv4Nodes();
+      } else if (this.packets.type == 1) {
+        this.generateaArpNodes();
+      }
     },
 
-    generateNodes() {
+    generateIpv4Nodes() {
       this.generateIps();
 
       this.nodes = []
@@ -127,17 +124,63 @@ export default {
             this.nodes[nodeName] = { name: ip, edgeWidth: 1, hue: 200 };
         });
       
-        console.log("gerando os pacotes...");
-
-        this.pacotes.forEach((pacote, index) => {
+        this.packets.data.forEach((pacote, index) => {
             var sourceNodeIndex = index + 1;
             var sourceNodeName = `node${sourceNodeIndex}`;
-            var targetNodeIndex = this.pacotes.findIndex(p => p.ip_origem === pacote.ip_destino) + 1;
+            var targetNodeIndex = this.packets.data.findIndex(p => p.ip_origem === pacote.ip_destino) + 1;
             var targetNodeName = `node${targetNodeIndex}`;
             var edgeName = `edge${index + 1}`;
             this.edges[edgeName] = { source: sourceNodeName, target: targetNodeName, edgeWidth: 1, hue: hues[Math.floor(Math.random() * hues.length)] };
         });
     },
+
+    generateaArpNodes() {
+      this.generateUniqueMacsList();
+
+      this.nodes = []
+      this.edges = []
+
+      this.ips.forEach((ip, index) => {
+            console.log("pacote ", index);
+            var nodeIndex = index + 1;
+            const nodeName = `node${nodeIndex}`;
+            this.nodes[nodeName] = { name: ip, edgeWidth: 1, hue: 200 };
+        });
+      //TODO: Aqui devemos procurar pelos pacotes que fizeram broadcast e indentificar as respostas para fazer as ligações
+        this.packets.data.forEach((pacote, index) => {
+            var sourceNodeIndex = index + 1;
+            var sourceNodeName = `node${sourceNodeIndex}`;
+            var targetNodeIndex = this.packets.data.findIndex(p => p.sender_hardware_address === pacote.sender_hardware_address) + 1;
+            var targetNodeName = `node${targetNodeIndex}`;
+            var edgeName = `edge${index + 1}`;
+            this.edges[edgeName] = { source: sourceNodeName, target: targetNodeName, edgeWidth: 1, hue: hues[Math.floor(Math.random() * hues.length)] };
+        });
+    },
+
+    generateIpsList() {
+      const ipsOrigem = this.packets.data.map(pacote => pacote.ip_origem);
+      const ipsDestino = this.packets.data.map(pacote => pacote.ip_destino);
+
+      // Combina os dois arrays
+      const todosIps = [...ipsOrigem, ...ipsDestino];
+
+      // Remove os valores duplicados
+      this.ips = todosIps.filter((ip, index) => todosIps.indexOf(ip) === index);
+    },
+
+    generateUniqueMacsList() {
+      const ipsOrigem = this.packets.data.map(packet => packet.sender_hardware_address);
+      const ipsDestino = this.packets.data.map(packet => packet.target_hardware_address);
+
+      console.log(ipsOrigem);
+      console.log(ipsDestino);
+
+      // Combina os dois arrays
+      const todosIps = [...ipsOrigem, ...ipsDestino];
+
+      // Remove os valores duplicados
+      this.ips = todosIps.filter((ip, index) => todosIps.indexOf(ip) === index);
+    }
   },
 };
 </script>

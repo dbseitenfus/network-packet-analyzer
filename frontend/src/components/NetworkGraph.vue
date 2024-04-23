@@ -150,27 +150,4 @@ body {
   font-family: sans-serif;
 }
 
-/* .graph,
-.v-network-graph > svg {
-  width: 100vw !important;
-  height: 100vh !important;
-} */
-
-.switch {
-  position: fixed;
-  top: 0;
-  left: 0;
-  display: flex;
-  align-items: center;
-  padding: 20px;
-  background-color: #eee;
-  cursor: pointer;
-}
-
-.switch input {
-  width: 20px;
-  height: 20px;
-  margin: 0 10px 0 0;
-  padding: 0;
-}
 </style>

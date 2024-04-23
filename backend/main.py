@@ -4,9 +4,9 @@ import dpkt
 import io
 from starlette.middleware.cors import CORSMiddleware
 from collections import Counter
-from datetime import datetime
 import requests
 import uvicorn
+from netaddr import EUI
 
 app = FastAPI()
 
@@ -21,7 +21,6 @@ app.add_middleware(
 
 # Lista para armazenar os pacotes
 pacotes = []
-ips_origem = []
 
 @app.get("/")
 def read_root():
@@ -73,7 +72,7 @@ async def listar_enderecos_ip():
 
 
 @app.post("/arp/list_packages")
-async def listar_pacotes(pcap_file: UploadFile = File(...)):
+async def listar_pacotes_arp(pcap_file: UploadFile = File(...)):
     global pacotes
     pacotes = []
     conteudo = await pcap_file.read()
@@ -83,16 +82,21 @@ async def listar_pacotes(pcap_file: UploadFile = File(...)):
         # Decodificar o pacote Ethernet
         pacote_eth = dpkt.ethernet.Ethernet(buf)
 
-        print(pacote_eth.arp)
+        # Verificar se o pacote é do tipo ARP
+        if isinstance(pacote_eth.data, dpkt.arp.ARP):
+            arp = pacote_eth.data
 
-        pacotes.append({
-            "timestamp": timestamp,
-            # "ip_origem": dpkt.utils.inet_to_str(ip.src),
-            # "ip_destino": dpkt.utils.inet_to_str(ip.dst),
-            # "mac_origem": ":".join("{:02x}".format(b) for b in pacote_eth.src),
-            # "mac_destino": ":".join("{:02x}".format(b) for b in pacote_eth.dst),
-            # "protocolo": ip.p,
-            # "tipo_ethernet": pacote_eth.type
-        })
-
-    return {"mensagem": "Pacotes processados com sucesso", "pacotes": pacotes }
+            # Adicionar informações do pacote ARP à lista
+            pacotes.append({
+                "hardware_type": arp.hrd,
+                "protocol_type": arp.pro,
+                "hardware_length": arp.hln,
+                "protocol_length": arp.pln,
+                "operation": arp.op,
+                "sender_hardware_address": ":".join("{:02x}".format(b) for b in arp.sha),
+                "sender_protocol_address": dpkt.utils.inet_to_str(arp.spa),
+                "target_hardware_address": ":".join("{:02x}".format(b) for b in arp.tha),
+                "target_protocol_address": dpkt.utils.inet_to_str(arp.tpa),
+                "tipo_ethernet": pacote_eth.type
+            })
+    return {"mensagem": "Pacotes ARP processados com sucesso", "pacotes": pacotes }

@@ -49,8 +49,8 @@ export default {
           response = await this.getIpv4Packets(formData);
         } else if(fileExtension == "pcap") {
           response = await this.getArpPackets(formData);
+          console.log(response)
         }
-         
 
         // Atualiza os pacotes com os dados recebidos
         this.pacotes = response.data.pacotes;
@@ -90,7 +90,7 @@ export default {
     }
   },
   mounted() {
-    this.listarEnderecosIP();
+    // this.listarEnderecosIP();
   }
 };
 </script>

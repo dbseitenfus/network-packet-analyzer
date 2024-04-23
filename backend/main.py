@@ -99,4 +99,5 @@ async def listar_pacotes_arp(pcap_file: UploadFile = File(...)):
                 "target_protocol_address": dpkt.utils.inet_to_str(arp.tpa),
                 "tipo_ethernet": pacote_eth.type
             })
+            
     return {"mensagem": "Pacotes ARP processados com sucesso", "pacotes": pacotes }

@@ -25,13 +25,15 @@ export default {
     }
   },
   mounted() {
-    this.criarGraficoIP();
+    this.createGraphicsIPV4();
   },  
   watch: {
     packets: {
       handler(newPackets) {
-        if (newPackets.data.length > 0) {
-          this.atualizarGraficos();
+        if (newPackets.data.length > 0 && newPackets.type == 0) {
+          this.atualizarGraficosIPV4(); 
+        }else if(newPackets.data.length > 0 && newPackets.type == 1){
+          this.atualizarGraficosARP();
         }
       },
       deep: true
@@ -99,8 +101,8 @@ export default {
     },
     createGraphicsARP(){
       // Extrai os endereços IP de origem e destino dos pacotes
-      const ipsOrigem = this.packets.data.map(pacote => pacote.ip_origem);
-      const ipsDestino = this.packets.data.map(pacote => pacote.ip_destino);
+      const ipsOrigem = this.packets.data.map(pacote => pacote.sender_hardware_address);
+      const ipsDestino = this.packets.data.map(pacote => pacote.target_hardware_address);
 
       // Conta a ocorrência de cada endereço IP
       const contadorOrigem = this.contarOcorrencias(ipsOrigem);
@@ -158,7 +160,7 @@ export default {
     criarGraficoIP() {
       if(this.packets.type == 0){
         this.createGraphicsIPV4();
-      }else {
+      }else if(this.packets.type == 1){
         this.createGraphicsARP();
       }
     },
@@ -168,10 +170,29 @@ export default {
         return acc;
       }, {});
     },
-    atualizarGraficos() {
+    atualizarGraficosIPV4() {
       // Atualiza os gráficos com os novos dados
+      console.log(this.packets.data)
       const ipsOrigem = this.packets.data.map(pacote => pacote.ip_origem);
       const ipsDestino = this.packets.data.map(pacote => pacote.ip_destino);
+
+      const contadorOrigem = this.contarOcorrencias(ipsOrigem);
+      const contadorDestino = this.contarOcorrencias(ipsDestino);
+
+      // Atualiza os dados do gráfico de IP de origem
+      this.chartOrigem.data.labels = Object.keys(contadorOrigem);
+      this.chartOrigem.data.datasets[0].data = Object.values(contadorOrigem);
+      this.chartOrigem.update();
+
+      // Atualiza os dados do gráfico de IP de destino
+      this.chartDestino.data.labels = Object.keys(contadorDestino);
+      this.chartDestino.data.datasets[0].data = Object.values(contadorDestino);
+      this.chartDestino.update();
+    },
+    atualizarGraficosARP() {
+      // Atualiza os gráficos com os novos dados
+      const ipsOrigem = this.packets.data.map(pacote => pacote.sender_hardware_address);
+      const ipsDestino = this.packets.data.map(pacote => pacote.target_hardware_address);
 
       const contadorOrigem = this.contarOcorrencias(ipsOrigem);
       const contadorDestino = this.contarOcorrencias(ipsDestino);

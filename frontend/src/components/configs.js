@@ -4,7 +4,10 @@ import { ForceLayout } from "v-network-graph/lib/force-layout";
 export function configs() {
   return defineConfigs({
     view: {
-      layoutHandler: new ForceLayout()
+      layoutHandler: new ForceLayout(),
+      scalingObjects: true,
+      minZoomLevel: 0.5,
+      maxZoomLevel: 10,
     },
 
     node: {
@@ -14,7 +17,8 @@ export function configs() {
     edge: {
       normal: {
         width: ({ edgeWidth }) => edgeWidth,
-        color: (edge) => `hsl(${edge.hue}, 50%, 50%`
+        color: (edge) => `hsl(${edge.hue}, 50%, 50%`,
+        dasharray: (edge) => (edge.dashed ? "4" : "0"),
       },
 
       hover: {

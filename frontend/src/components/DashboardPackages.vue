@@ -10,14 +10,12 @@
     <input id="fileInput" ref="fileInput" type="file" style="display: none" @change="uploadArquivo">
     <div class="graph-container">
       <network-graph class="graph" :packets="packets" />
-      <graphics-page class="graphics" :packets="packets" />
     </div>
   </div>
 </template>
 
 <script>
 import axios from "axios";
-import GraphicsPage from './GraphicsPage.vue';
 import NetworkGraph from "./NetworkGraph.vue";
 import { NIcon } from "naive-ui";
 import { CloudUpload } from "@vicons/ionicons5";
@@ -25,7 +23,6 @@ import { CloudUpload } from "@vicons/ionicons5";
 export default {
   name: 'DashboardPackages',
   components: {
-    GraphicsPage,
     NetworkGraph,
     NIcon,
     CloudUpload,
@@ -84,7 +81,7 @@ export default {
 
     getFileExtension(fileName) {
       const array = fileName.split('.');
-      return array.slice(-1);
+      return array.slice(-1)[0];
     },
 
     async listarEnderecosIP() {
@@ -103,6 +100,13 @@ export default {
 </script>
 
 <style scoped>
+.page {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
 .float-button {
   position: fixed;
   bottom: 20px;
@@ -131,25 +135,16 @@ export default {
 }
 
 .graph-container {
-  position: relative;
-  width: 100%; 
-  height: 100%;
+  flex-grow: 1;
   display: flex;
-  flex-direction: column;
-}
-
-.graphics {
-  position: absolute;
-  background-color: #fff;
-  top: 20px; 
-  right: 20px;
-  width: 400px; 
-  height: calc(100vh - 40px);
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
 }
 
 .graph {
-  width: calc(100% - 420px);
-  height: 100vh;
+  width: 100%;
+  height: 100%;
   background-color: aqua;
 }
 </style>

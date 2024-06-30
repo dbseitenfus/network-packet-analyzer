@@ -46,10 +46,17 @@ async def listar_pacotes(pcap_file: UploadFile = File(...)):
                 "timestamp": timestamp,
                 "ip_origem": dpkt.utils.inet_to_str(ip.src),
                 "ip_destino": dpkt.utils.inet_to_str(ip.dst),
-                "mac_origem": ":".join("{:02x}".format(b) for b in pacote_eth.src),
-                "mac_destino": ":".join("{:02x}".format(b) for b in pacote_eth.dst),
+                "versao": ip.v,
+                "tamanho_cabecalho": ip.hl * 4,  # Tamanho do cabeçalho em bytes
+                "tipo_servico": ip.tos,
+                "comprimento_total": ip.len,
+                "identificacao": ip.id,
+                "flags": ip.off >> 13, 
+                "deslocamento_fragmento": ip.off & dpkt.ip.IP_OFFMASK,
+                "ttl": ip.ttl,
+                "soma_verificacao": ip.sum,
                 "protocolo": ip.p,
-                "tipo_ethernet": pacote_eth.type
+                "tipo_ethernet": ip.type
             })
 
     return {"mensagem": "Pacotes processados com sucesso", "pacotes": pacotes }

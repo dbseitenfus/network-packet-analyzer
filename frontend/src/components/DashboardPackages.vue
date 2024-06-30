@@ -32,39 +32,84 @@ export default {
       packets: {
         type: -1,
         data: []
-      },
-      enderecosIP: [],
+      }
     };
   },
   methods: {
     async uploadArquivo(event) {
       const arquivo = event.target.files[0];
+      
+      if (!arquivo) {
+        console.error("Nenhum arquivo selecionado.");
+        return;
+      }
+
       const formData = new FormData();
       formData.append("pcap_file", arquivo);
 
       try {
         const fileExtension = this.getFileExtension(arquivo.name);
-        var response;
-        if(fileExtension == "pcapng") {
-          this.packets.type = 0;
-          response = await this.getIpv4Packets(formData);
-        } else if(fileExtension == "pcap") {
-          this.packets.type = 1;
-          response = await this.getArpPackets(formData);
-          
+
+        if (fileExtension === "pcapng") {
+          this.packets.type = 0; // IPv4
+          const response = await this.getIpv4Packets(formData);
+          console.log(response);
+          this.packets.data = response.data.pacotes;
+        } else if (fileExtension === "pcap") {
+          const protocolName = this.getProtocolName(arquivo.name);
+          if (protocolName === "ipv4") {
+            this.packets.type = 0; // IPv4
+            const response = await this.getIpv4Packets(formData);
+            console.log(response);
+            this.packets.data = response.data.pacotes;
+          } else if (protocolName === "arp") {
+            this.packets.type = 1; // ARP
+            const response = await this.getArpPackets(formData);
+            console.log(response);
+            this.packets.data = response.data.pacotes;
+          } else if (protocolName === "rip") {
+            this.packets.type = 2; // RIP (exemplo)
+            const response = await this.getRipPackets(formData);
+            console.log(response);
+            this.packets.data = response.data.pacotes;
+          } else if (protocolName === "udp") {
+            this.packets.type = 3; // UDP (exemplo)
+            const response = await this.getUdpPackets(formData);
+            console.log(response);
+            this.packets.data = response.data.pacotes;
+          } else {
+            throw new Error("Protocolo não suportado: " + protocolName);
+          }
+        } else {
+          throw new Error("Formato de arquivo não suportado.");
         }
-
-        console.log(response)
-
-        // Atualiza os pacotes com os dados recebidos
-        this.packets.data = response.data.pacotes;
       } catch (error) {
         console.error("Erro ao enviar arquivo:", error);
       }
     },
 
+    getFileExtension(fileName) {
+      return fileName.split(".").pop().toLowerCase();
+    },
+
+    getProtocolName(fileName) {
+      const baseName = fileName.split(".")[0].toLowerCase();
+      if (baseName.includes("ipv4")) {
+        return "ipv4";
+      } else if (baseName.includes("arp")) {
+        return "arp";
+      } else if (baseName.includes("rip")) {
+        return "rip";
+      } else if (baseName.includes("udp")) {
+        return "udp";
+      } else {
+        throw new Error("Protocolo não identificado pelo nome do arquivo.");
+      }
+    },
+
+
     async getIpv4Packets(formData) {
-      return await axios.post("http://localhost:8000/list_packages", formData, {
+      return await axios.post("http://localhost:8000/ipv4/list_packages", formData, {
           headers: {
             "Content-Type": "multipart/form-data"
           }
@@ -79,22 +124,10 @@ export default {
         });
     },
 
-    getFileExtension(fileName) {
-      const array = fileName.split('.');
-      return array.slice(-1)[0];
-    },
-
-    async listarEnderecosIP() {
-      try {
-        const response = await axios.get("http://localhost:8000/listar_enderecos_ip");
-        this.enderecosIP = response.data.enderecos_ip;
-      } catch (error) {
-        console.error("Erro ao listar endereços IP:", error);
-      }
-    }
-  },
-  mounted() {
-    // this.listarEnderecosIP();
+    // getFileExtension(fileName) {
+    //   const array = fileName.split('.');
+    //   return array.slice(-1)[0];
+    // },
   }
 };
 </script>

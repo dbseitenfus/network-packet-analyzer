@@ -18,7 +18,7 @@
       </template>
     </v-network-graph>
     
-    <div v-if="selectedNode" class="node-info">
+    <div v-if="packets.type === 0 && selectedNode" class="node-info">
       <p><strong>ID:</strong> {{ selectedPacket.identificacao }}</p>
       <p><strong>IP:</strong> {{ nodes[selectedNode].name }}</p>
       <p><strong>TTL:</strong> {{ selectedPacket.ttl }}</p>
@@ -33,6 +33,11 @@
           <button class="modal-close-btn" @click="fecharModalGraficosIPv4">Fechar</button>
         </div>
       </div>
+    </div>
+
+    <div v-if="packets.type === 1 && selectedNode" class="node-info">
+      <p><strong>ID:</strong>etesteee</p>
+      
     </div>
   </div>
 </template>
@@ -158,8 +163,8 @@ export default {
       if (this.packets.type === 0) {
         this.generateIpv4Nodes();
       } else if (this.packets.type === 1) {
-        this.generateaArpNodes();
-      }
+        this.generateArpNodes();
+      } 
     },
 
     generateIpv4Nodes() {
@@ -190,7 +195,7 @@ export default {
       });
     },
 
-    generateaArpNodes() {
+    generateArpNodes() {
       this.generateUniqueMacsList();
 
       this.nodes = [];

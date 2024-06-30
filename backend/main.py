@@ -26,8 +26,8 @@ pacotes = []
 def read_root():
     return {"Hello world"}
 
-@app.post("/list_packages")
-async def listar_pacotes(pcap_file: UploadFile = File(...)):
+@app.post("/ipv4/list_packages")
+async def listar_pacotes_ipv4(pcap_file: UploadFile = File(...)):
     global pacotes
     pacotes = []
     conteudo = await pcap_file.read()
@@ -56,7 +56,6 @@ async def listar_pacotes(pcap_file: UploadFile = File(...)):
                 "ttl": ip.ttl,
                 "soma_verificacao": ip.sum,
                 "protocolo": ip.p,
-                "tipo_ethernet": ip.type
             })
 
     return {"mensagem": "Pacotes processados com sucesso", "pacotes": pacotes }
@@ -77,11 +76,10 @@ async def listar_enderecos_ip():
 
     return {"enderecos_ip": list(enderecos_ip_unicos)}
 
-
 @app.post("/arp/list_packages")
 async def listar_pacotes_arp(pcap_file: UploadFile = File(...)):
-    global pacotes
-    pacotes = []
+    global pacotes_arp
+    pacotes_arp = []
     conteudo = await pcap_file.read()
     captura = dpkt.pcap.Reader(io.BytesIO(conteudo))
 
@@ -94,7 +92,8 @@ async def listar_pacotes_arp(pcap_file: UploadFile = File(...)):
             arp = pacote_eth.data
 
             # Adicionar informações do pacote ARP à lista
-            pacotes.append({
+            pacotes_arp.append({
+                "timestamp": timestamp,
                 "hardware_type": arp.hrd,
                 "protocol_type": arp.pro,
                 "hardware_length": arp.hln,
@@ -107,4 +106,4 @@ async def listar_pacotes_arp(pcap_file: UploadFile = File(...)):
                 "tipo_ethernet": pacote_eth.type
             })
             
-    return {"mensagem": "Pacotes ARP processados com sucesso", "pacotes": pacotes }
+    return {"mensagem": "Pacotes ARP processados com sucesso", "pacotes": pacotes_arp }

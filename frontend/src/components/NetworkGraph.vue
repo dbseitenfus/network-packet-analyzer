@@ -24,6 +24,28 @@
       <p><strong>TTL:</strong> {{ selectedPacket.ttl }}</p>
       <p><strong>Protocolo:</strong> {{ selectedPacket.protocolo == 6 ? "TCP" : selectedPacket.protocolo == 2 ? "ICMP" : "UDP"}}</p>
     </div>
+
+    <div v-if="packets.type === 2 && selectedRIP" class="node-info">
+      <div v-for="(packet, index) in packets.data" :key="index">
+        <p><strong>IP de Origem:</strong> {{ packet.source_ip }}</p>
+        <p><strong>IP de Destino:</strong> {{ packet.destination_ip }}</p>
+        <p><strong>Tipo de Comando:</strong> {{ packet.command_type }}</p>
+        <p><strong>Versão:</strong> {{ packet.version }}</p>
+
+        <template v-if="packet.entries.length">
+          <strong>Entries:</strong>
+          <ul>
+            <li v-for="(entry, entryIndex) in packet.entries" :key="entryIndex">
+              <p><strong>Família de Endereço:</strong> {{ entry.address_family }}</p>
+              <p><strong>Route Tag:</strong> {{ entry.route_tag }}</p>
+              <p><strong>Endereço IP:</strong> {{ entry.ip_address }}</p>
+              <p><strong>Próximo Salto:</strong> {{ entry.next_hop }}</p>
+              <p><strong>Métrica:</strong> {{ entry.metric }}</p>
+            </li>
+          </ul>
+        </template>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -43,6 +65,7 @@ export default {
       size,
       selectedNode: null,
       selectedPacket: null,
+      selectedRIP: null,
     };
   },
 
@@ -67,9 +90,7 @@ export default {
         },
 
         "node:click": ({ node }) => {
-          if(this.packets.type == 0) {
-            this.handleClickNode(node);
-          }
+          this.handleClickNode(node);
         },
       };
     }
@@ -109,12 +130,14 @@ export default {
     },
 
     handleClickNode(nodeId) {
-      if (this.selectedNode !== null) {
-        this.resetNodeStyles(this.selectedNode);
-      }
+      if(this.packets.type == 0) {
+        if (this.selectedNode !== null) {
+          this.resetNodeStyles(this.selectedNode);
+        }
 
-      this.selectedNode = nodeId;
-      this.applyNodeStyles(nodeId);
+        this.selectedNode = nodeId;
+        this.applyNodeStyles(nodeId);
+      }
     },
 
     resetNodeStyles(nodeId) {
@@ -153,7 +176,9 @@ export default {
         this.generateIpv4Nodes();
       } else if (this.packets.type === 1) {
         this.generateArpNodes();
-      } 
+      } else if( this.packets.type == 2){
+        this.generateRipNodes();
+      }
     },
 
     generateIpv4Nodes() {
@@ -204,19 +229,52 @@ export default {
         const targetNodeName = `node${targetNodeIndex}`;
         const edgeName = `edge${index + 1}`;
         
-        // Verificação se os nodes de origem e destino são válidos
-        //if (sourceNodeIndex > 0 && targetNodeIndex > 0) {
-          this.edges[edgeName] = {
-            source: sourceNodeName,
-            target: targetNodeName,
-            edgeWidth: 1,
-            hue: hues[Math.floor(Math.random() * hues.length)],
-          };
-        //} else {
-          //console.warn(`Pacote ${index + 1}: endereço MAC não encontrado.`);
-        //}
+       
+        this.edges[edgeName] = {
+          source: sourceNodeName,
+          target: targetNodeName,
+          edgeWidth: 1,
+          hue: hues[Math.floor(Math.random() * hues.length)],
+        };
+        
       });
     },
+
+    generateRipNodes() {
+      this.nodes = [];
+      this.edges = [];
+
+      // Mapa para rastrear nós únicos por IP
+      const ipToNodeMap = new Map();
+
+      // Processar cada pacote RIP para criar nós e arestas
+      if (Array.isArray(this.packets.data)) {
+        this.packets.data.forEach((packet, index) => {
+          const sourceIp = packet.source_ip;
+          const destinationIp = packet.destination_ip;
+
+          // Verificar e adicionar nós se não existirem
+          if (!ipToNodeMap.has(sourceIp)) {
+            ipToNodeMap.set(sourceIp, { id: `node${this.nodes.length + 1}`, name: sourceIp });
+            this.nodes.push(ipToNodeMap.get(sourceIp));
+          }
+          if (!ipToNodeMap.has(destinationIp)) {
+            ipToNodeMap.set(destinationIp, { id: `node${this.nodes.length + 1}`, name: destinationIp });
+            this.nodes.push(ipToNodeMap.get(destinationIp));
+          }
+
+          // Criar aresta entre os nós
+          const sourceNode = ipToNodeMap.get(sourceIp);
+          const targetNode = ipToNodeMap.get(destinationIp);
+          this.edges.push({
+            id: `edge${index + 1}`,
+            source: sourceNode.id,
+            target: targetNode.id,
+          });
+        });
+      }
+    },
+
 
     generateIpsList() {
       const ipsOrigem = this.packets.data.map(pacote => pacote.ip_origem);

@@ -102,3 +102,54 @@ async def listar_pacotes_arp(pcap_file: UploadFile = File(...)):
             })
             
     return {"mensagem": "Pacotes ARP processados com sucesso", "pacotes": pacotes_arp}
+
+@app.post("/rip/listar_pacotes")
+async def listar_pacotes_rip(pcap_file: UploadFile = File(...)):
+    global pacotes_rip
+    pacotes_rip = []  # Limpa a lista global de pacotes RIP
+    conteudo = await pcap_file.read()
+    captura = dpkt.pcap.Reader(io.BytesIO(conteudo))
+
+    for timestamp, buf in captura:
+        # Decodificar o pacote Ethernet
+        pacote_eth = dpkt.ethernet.Ethernet(buf)
+
+        # Verificar se o pacote é do tipo IP e UDP
+        if isinstance(pacote_eth.data, dpkt.ip.IP) and isinstance(pacote_eth.data.data, dpkt.udp.UDP):
+            ip = pacote_eth.data
+            udp = ip.data
+
+            # Verificar se é um pacote RIP
+            if udp.dport == 520 or udp.sport == 520:
+                rip = dpkt.rip.RIP(udp.data)
+
+                # Interpretar o tipo de comando RIP
+                tipo_comando = "Unknown"
+                if rip.cmd == 1:
+                    tipo_comando = "Request"
+                elif rip.cmd == 2:
+                    tipo_comando = "Response"
+
+                # Processar as entradas RIP
+                entries = []
+                for entry in rip.data:
+                    entries.append({
+                        "address_family": entry.family,
+                        "route_tag": entry.route_tag,
+                        "ip_address": dpkt.utils.inet_to_str(entry.addr.to_bytes(4, 'big')),
+                        "next_hop": dpkt.utils.inet_to_str(entry.next_hop.to_bytes(4, 'big')),
+                        "metric": entry.metric,
+                    })
+
+                # Adicionar informações do pacote RIP à lista
+                pacotes_rip.append({
+                    "timestamp": timestamp,
+                    "source_ip": dpkt.utils.inet_to_str(ip.src),
+                    "destination_ip": dpkt.utils.inet_to_str(ip.dst),
+                    "command_type": tipo_comando,
+                    "version": rip.v,
+                    "entries": entries,
+                })
+
+    return {"message": "Pacotes RIP processados com sucesso", "pacotes": pacotes_rip}
+

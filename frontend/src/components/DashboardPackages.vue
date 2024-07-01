@@ -8,10 +8,19 @@
       </div>
     </label>
 
+    <label for="showGraphBtn" class="float-button-top btn-floating-top" v-if="showInfoButton">
+      <div class="icon-container" @click="mostrarModalGraficos">
+        <n-icon size="24">
+          <information-circle/>
+        </n-icon>
+      </div>
+    </label>
+
     <div v-if="showModalGraphics" class="modal-background">
       <div class="modal-content">
         <graphics-page v-if="showGraphicsIPv4" :packets="packets" />
         <packet-traffic v-if="showGraphicsARP" :packetData="packets.data" />
+        <rip-nodes-table v-if="showInfoRIP" :ripNodes="packets.data" />
         <button class="modal-close-btn" @click="fecharModalGraficosIPv4">Fechar</button>
       </div>
     </div>
@@ -35,9 +44,10 @@
 import axios from "axios";
 import NetworkGraph from "./NetworkGraph.vue";
 import { NIcon } from "naive-ui";
-import { CloudUpload, BarChart } from "@vicons/ionicons5";
+import { CloudUpload, BarChart, InformationCircle } from "@vicons/ionicons5";
 import GraphicsPage from './GraphicsPage.vue';
 import PacketTraffic from './PacketTraffic.vue';
+import RipNodesTable from './RipNodesTable.vue'; 
 
 export default {
   name: 'DashboardPackages',
@@ -46,8 +56,10 @@ export default {
     NIcon,
     CloudUpload,
     BarChart,
+    InformationCircle,
     GraphicsPage,
-    PacketTraffic
+    PacketTraffic,
+    RipNodesTable
   },
   data() {
     return {
@@ -56,9 +68,11 @@ export default {
         data: []
       },
       showGraphButton: false,
+      showInfoButton: false,
       showModalGraphics: false,
       showGraphicsIPv4: false,
       showGraphicsARP: false,
+      showInfoRIP: false,
     };
   },
   methods: {
@@ -81,6 +95,7 @@ export default {
           const response = await this.getIpv4Packets(formData);
           this.packets.data = response.data.pacotes;
           this.showGraphButton = true; // Mostra o botão de gráfico
+          this.showInfoButton = false;
         } else if (fileExtension === "pcap") {
           const protocolName = this.getProtocolName(arquivo.name);
           if (protocolName === "ipv4") {
@@ -88,21 +103,25 @@ export default {
             const response = await this.getIpv4Packets(formData);
             this.packets.data = response.data.pacotes;
             this.showGraphButton = true; // Mostra o botão de gráfico
+            this.showInfoButton = false;
           } else if (protocolName === "arp") {
             this.packets.type = 1; // ARP
             const response = await this.getArpPackets(formData);
             this.packets.data = response.data.pacotes;
             this.showGraphButton = true; // Mostra o botão de gráfico
+            this.showInfoButton = false;
           } else if (protocolName === "rip") {
-            this.packets.type = 2; // RIP (exemplo)
+            this.packets.type = 2; // RIP 
             const response = await this.getRipPackets(formData);
             this.packets.data = response.data.pacotes;
-            this.showGraphButton = true; // Mostra o botão de gráfico
+            this.showGraphButton = false;
+            this.showInfoButton = true;
           } else if (protocolName === "udp") {
             this.packets.type = 3; // UDP (exemplo)
             const response = await this.getUdpPackets(formData);
             this.packets.data = response.data.pacotes;
-            this.showGraphButton = true; // Mostra o botão de gráfico
+            this.showGraphButton = false; // Mostra o botão de gráfico
+            this.showInfoButton = false;
           } else {
             throw new Error("Protocolo não suportado: " + protocolName);
           }
@@ -120,6 +139,8 @@ export default {
         this.showGraphicsIPv4 = true;
       }else if(this.packets.type == 1){
         this.showGraphicsARP = true;
+      }else if(this.packets.type == 2){
+        this.showInfoRIP = true;
       }
     },
 
@@ -161,6 +182,14 @@ export default {
 
     async getArpPackets(formData) {
       return await axios.post("http://localhost:8000/arp/list_packages", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data"
+        }
+      });
+    },
+
+    async getRipPackets(formData) {
+      return await axios.post("http://localhost:8000/rip/listar_pacotes", formData, {
         headers: {
           "Content-Type": "multipart/form-data"
         }

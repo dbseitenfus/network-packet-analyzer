@@ -153,3 +153,32 @@ async def listar_pacotes_rip(pcap_file: UploadFile = File(...)):
 
     return {"message": "Pacotes RIP processados com sucesso", "pacotes": pacotes_rip}
 
+@app.post("/udp/list_packages")
+async def listar_pacotes_udp(pcap_file: UploadFile = File(...)):
+    global pacotes_udp
+    pacotes_udp = []
+    conteudo = await pcap_file.read()
+    captura = dpkt.pcap.Reader(io.BytesIO(conteudo))
+
+    for timestamp, buf in captura:
+        # Decodificar o pacote Ethernet
+        pacote_eth = dpkt.ethernet.Ethernet(buf)
+
+        # Verificar se o pacote é do tipo IP e UDP
+        if isinstance(pacote_eth.data, dpkt.ip.IP) and isinstance(pacote_eth.data.data, dpkt.udp.UDP):
+            ip = pacote_eth.data
+            udp = ip.data
+
+            # Adicionar informações do pacote UDP à lista
+            pacotes_udp.append({
+                "timestamp": timestamp,
+                "ip_origem": dpkt.utils.inet_to_str(ip.src),
+                "ip_destino": dpkt.utils.inet_to_str(ip.dst),
+                "porta_origem": udp.sport,
+                "porta_destino": udp.dport,
+                "comprimento": udp.ulen,
+                "checksum": udp.sum,
+                "dados": udp.data.hex()
+            })
+
+    return {"mensagem": "Pacotes UDP processados com sucesso", "pacotes": pacotes_udp}

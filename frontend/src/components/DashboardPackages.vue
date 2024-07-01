@@ -135,21 +135,23 @@ export default {
 
     mostrarModalGraficos() {
       this.showModalGraphics = true;
-      if(this.packets.type == 0){
+      if (this.packets.type === 0) {
         this.showGraphicsIPv4 = true;
-      }else if(this.packets.type == 1){
+      } else if (this.packets.type === 1) {
         this.showGraphicsARP = true;
-      }else if(this.packets.type == 2){
+      } else if (this.packets.type === 2) {
         this.showInfoRIP = true;
       }
     },
 
     fecharModalGraficosIPv4() {
       this.showModalGraphics = false;
-      if(this.packets.type == 0){
+      if (this.packets.type === 0) {
         this.showGraphicsIPv4 = false;
-      }else if(this.packets.type == 1){
+      } else if (this.packets.type === 1) {
         this.showGraphicsARP = false;
+      } else if (this.packets.type === 2) {
+        this.showInfoRIP = false;
       }
     },
 

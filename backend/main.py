@@ -94,16 +94,11 @@ async def listar_pacotes_arp(pcap_file: UploadFile = File(...)):
             # Adicionar informações do pacote ARP à lista
             pacotes_arp.append({
                 "timestamp": timestamp,
-                "hardware_type": arp.hrd,
-                "protocol_type": arp.pro,
-                "hardware_length": arp.hln,
-                "protocol_length": arp.pln,
                 "operation": arp.op,
                 "sender_hardware_address": ":".join("{:02x}".format(b) for b in arp.sha),
                 "sender_protocol_address": dpkt.utils.inet_to_str(arp.spa),
                 "target_hardware_address": ":".join("{:02x}".format(b) for b in arp.tha),
                 "target_protocol_address": dpkt.utils.inet_to_str(arp.tpa),
-                "tipo_ethernet": pacote_eth.type
             })
             
-    return {"mensagem": "Pacotes ARP processados com sucesso", "pacotes": pacotes_arp }
+    return {"mensagem": "Pacotes ARP processados com sucesso", "pacotes": pacotes_arp}

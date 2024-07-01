@@ -23,21 +23,6 @@
       <p><strong>IP:</strong> {{ nodes[selectedNode].name }}</p>
       <p><strong>TTL:</strong> {{ selectedPacket.ttl }}</p>
       <p><strong>Protocolo:</strong> {{ selectedPacket.protocolo == 6 ? "TCP" : selectedPacket.protocolo == 2 ? "ICMP" : "UDP"}}</p>
-
-      <a href="#" @click="mostrarModalGraficosIPv4">Mostrar Gráficos IPv4</a>
-      
-      <!-- Modal para mostrar os gráficos -->
-      <div v-if="mostrarModal" class="modal-background">
-        <div class="modal-content">
-          <graphics-page v-if="mostrarGraficosIpv4" :packets="packets" />
-          <button class="modal-close-btn" @click="fecharModalGraficosIPv4">Fechar</button>
-        </div>
-      </div>
-    </div>
-
-    <div v-if="packets.type === 1 && selectedNode" class="node-info">
-      <p><strong>ID:</strong>etesteee</p>
-      
     </div>
   </div>
 </template>
@@ -45,14 +30,10 @@
 <script>
 import { nodes, edges, size, hues } from "./data";
 import { configs } from "./configs";
-import GraphicsPage from './GraphicsPage.vue';
 
 export default {
   props: {
     packets: Object
-  },
-  components: {
-    GraphicsPage
   },
   data() {
     return {
@@ -62,8 +43,6 @@ export default {
       size,
       selectedNode: null,
       selectedPacket: null,
-      mostrarModal: false,
-      mostrarGraficosIpv4: false
     };
   },
 
@@ -88,7 +67,9 @@ export default {
         },
 
         "node:click": ({ node }) => {
-          this.handleClickNode(node);
+          if(this.packets.type == 0) {
+            this.handleClickNode(node);
+          }
         },
       };
     }
@@ -149,14 +130,22 @@ export default {
     },
 
     handleHoverEdge(edge, size, color) {
-      const { source, target, hue } = this.edges[edge];
-      const defaultColor = `hsl(${hue}, 50%, 50%)`;
+      const edgeData = this.edges[edge]; // Acessa o objeto de edge diretamente
 
-      this.$refs[source].style.strokeWidth = this.size[size];
-      this.$refs[target].style.strokeWidth = this.size[size];
+      if (edgeData) { // Verifica se edgeData está definido
+        const { source, target, hue } = edgeData;
+        const defaultColor = `hsl(${hue}, 50%, 50%)`;
 
-      this.$refs[source].style.stroke = color ?? defaultColor;
-      this.$refs[target].style.stroke = color ?? defaultColor;
+        if (this.$refs[source]) {
+          this.$refs[source].style.strokeWidth = this.size[size];
+          this.$refs[source].style.stroke = color ?? defaultColor;
+        }
+
+        if (this.$refs[target]) {
+          this.$refs[target].style.strokeWidth = this.size[size];
+          this.$refs[target].style.stroke = color ?? defaultColor;
+        }
+      }
     },
 
     generateNodes() {
@@ -207,18 +196,25 @@ export default {
         this.nodes[nodeName] = { name: ip, edgeWidth: 1, hue: 200 };
       });
 
+      // Criação das edges com base nos pacotes ARP
       this.packets.data.forEach((pacote, index) => {
-        const sourceNodeIndex = index + 1;
+        const sourceNodeIndex = this.ips.indexOf(pacote.sender_hardware_address) + 1;
         const sourceNodeName = `node${sourceNodeIndex}`;
-        const targetNodeIndex = this.packets.data.findIndex(p => p.sender_hardware_address === pacote.sender_hardware_address) + 1;
+        const targetNodeIndex = this.ips.indexOf(pacote.target_hardware_address) + 1;
         const targetNodeName = `node${targetNodeIndex}`;
         const edgeName = `edge${index + 1}`;
-        this.edges[edgeName] = { 
-          source: sourceNodeName, 
-          target: targetNodeName, 
-          edgeWidth: 1, 
-          hue: hues[Math.floor(Math.random() * hues.length)], 
-        };
+        
+        // Verificação se os nodes de origem e destino são válidos
+        //if (sourceNodeIndex > 0 && targetNodeIndex > 0) {
+          this.edges[edgeName] = {
+            source: sourceNodeName,
+            target: targetNodeName,
+            edgeWidth: 1,
+            hue: hues[Math.floor(Math.random() * hues.length)],
+          };
+        //} else {
+          //console.warn(`Pacote ${index + 1}: endereço MAC não encontrado.`);
+        //}
       });
     },
 
@@ -250,16 +246,6 @@ export default {
         packet.ip_origem === selectedIP || packet.ip_destino === selectedIP
       );
     },
-
-    mostrarModalGraficosIPv4() {
-      this.mostrarModal = true;
-      this.mostrarGraficosIpv4 = true;
-    },
-
-    fecharModalGraficosIPv4() {
-      this.mostrarModal = false;
-      this.mostrarGraficosIpv4 = false;
-    }
   }
 };
 </script>
@@ -289,37 +275,5 @@ body {
   text-align: justify;
 }
 
-.modal-background {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background-color: rgba(0, 0, 0, 0.5);
-  z-index: 999;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.modal-content {
-  background-color: white;
-  padding: 20px;
-  border-radius: 5px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
-  width: 80%;
-  height: 80%;
-  overflow: auto;
-}
-
-.modal-close-btn {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  padding: 5px 10px;
-  background-color: #ddd;
-  border: none;
-  cursor: pointer;
-}
 
 </style>

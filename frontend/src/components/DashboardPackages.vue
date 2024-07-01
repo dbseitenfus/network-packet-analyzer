@@ -1,5 +1,21 @@
 <template>
   <div class="page">
+    <label for="showGraphBtn" class="float-button-top btn-floating-top" v-if="showGraphButton">
+      <div class="icon-container" @click="mostrarModalGraficos">
+        <n-icon size="24">
+          <bar-chart/>
+        </n-icon>
+      </div>
+    </label>
+
+    <div v-if="showModalGraphics" class="modal-background">
+      <div class="modal-content">
+        <graphics-page v-if="showGraphicsIPv4" :packets="packets" />
+        <packet-traffic v-if="showGraphicsARP" :packetData="packets.data" />
+        <button class="modal-close-btn" @click="fecharModalGraficosIPv4">Fechar</button>
+      </div>
+    </div>
+
     <label for="fileInput" class="float-button btn-floating">
       <div class="icon-container">
         <n-icon size="24">
@@ -8,6 +24,7 @@
       </div>
     </label>
     <input id="fileInput" ref="fileInput" type="file" style="display: none" @change="uploadArquivo">
+    
     <div class="graph-container">
       <network-graph class="graph" :packets="packets" />
     </div>
@@ -18,7 +35,9 @@
 import axios from "axios";
 import NetworkGraph from "./NetworkGraph.vue";
 import { NIcon } from "naive-ui";
-import { CloudUpload } from "@vicons/ionicons5";
+import { CloudUpload, BarChart } from "@vicons/ionicons5";
+import GraphicsPage from './GraphicsPage.vue';
+import PacketTraffic from './PacketTraffic.vue';
 
 export default {
   name: 'DashboardPackages',
@@ -26,13 +45,20 @@ export default {
     NetworkGraph,
     NIcon,
     CloudUpload,
+    BarChart,
+    GraphicsPage,
+    PacketTraffic
   },
   data() {
     return {
       packets: {
         type: -1,
         data: []
-      }
+      },
+      showGraphButton: false,
+      showModalGraphics: false,
+      showGraphicsIPv4: false,
+      showGraphicsARP: false,
     };
   },
   methods: {
@@ -53,30 +79,30 @@ export default {
         if (fileExtension === "pcapng") {
           this.packets.type = 0; // IPv4
           const response = await this.getIpv4Packets(formData);
-          console.log(response);
           this.packets.data = response.data.pacotes;
+          this.showGraphButton = true; // Mostra o botão de gráfico
         } else if (fileExtension === "pcap") {
           const protocolName = this.getProtocolName(arquivo.name);
           if (protocolName === "ipv4") {
             this.packets.type = 0; // IPv4
             const response = await this.getIpv4Packets(formData);
-            console.log(response);
             this.packets.data = response.data.pacotes;
+            this.showGraphButton = true; // Mostra o botão de gráfico
           } else if (protocolName === "arp") {
             this.packets.type = 1; // ARP
             const response = await this.getArpPackets(formData);
-            console.log(response);
             this.packets.data = response.data.pacotes;
+            this.showGraphButton = true; // Mostra o botão de gráfico
           } else if (protocolName === "rip") {
             this.packets.type = 2; // RIP (exemplo)
             const response = await this.getRipPackets(formData);
-            console.log(response);
             this.packets.data = response.data.pacotes;
+            this.showGraphButton = true; // Mostra o botão de gráfico
           } else if (protocolName === "udp") {
             this.packets.type = 3; // UDP (exemplo)
             const response = await this.getUdpPackets(formData);
-            console.log(response);
             this.packets.data = response.data.pacotes;
+            this.showGraphButton = true; // Mostra o botão de gráfico
           } else {
             throw new Error("Protocolo não suportado: " + protocolName);
           }
@@ -85,6 +111,24 @@ export default {
         }
       } catch (error) {
         console.error("Erro ao enviar arquivo:", error);
+      }
+    },
+
+    mostrarModalGraficos() {
+      this.showModalGraphics = true;
+      if(this.packets.type == 0){
+        this.showGraphicsIPv4 = true;
+      }else if(this.packets.type == 1){
+        this.showGraphicsARP = true;
+      }
+    },
+
+    fecharModalGraficosIPv4() {
+      this.showModalGraphics = false;
+      if(this.packets.type == 0){
+        this.showGraphicsIPv4 = false;
+      }else if(this.packets.type == 1){
+        this.showGraphicsARP = false;
       }
     },
 
@@ -107,28 +151,22 @@ export default {
       }
     },
 
-
     async getIpv4Packets(formData) {
       return await axios.post("http://localhost:8000/ipv4/list_packages", formData, {
-          headers: {
-            "Content-Type": "multipart/form-data"
-          }
-        });
+        headers: {
+          "Content-Type": "multipart/form-data"
+        }
+      });
     },
 
     async getArpPackets(formData) {
       return await axios.post("http://localhost:8000/arp/list_packages", formData, {
-          headers: {
-            "Content-Type": "multipart/form-data"
-          }
-        });
+        headers: {
+          "Content-Type": "multipart/form-data"
+        }
+      });
     },
-
-    // getFileExtension(fileName) {
-    //   const array = fileName.split('.');
-    //   return array.slice(-1)[0];
-    // },
-  }
+  },
 };
 </script>
 
@@ -147,7 +185,14 @@ export default {
   z-index: 9999;
 }
 
-.btn-floating {
+.float-button-top {
+  position: fixed;
+  top: 20px; 
+  left: 20px;
+  z-index: 9999;
+}
+
+.btn-floating, .btn-floating-top {
   background-color: #232343;
   color: white;
   border: none;
@@ -179,5 +224,38 @@ export default {
   width: 100%;
   height: 100%;
   background-color: aqua;
+}
+
+.modal-background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 999;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-content {
+  background-color: white;
+  padding: 20px;
+  border-radius: 5px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+  width: 80%;
+  height: 80%;
+  overflow: auto;
+}
+
+.modal-close-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  padding: 5px 10px;
+  background-color: #ddd;
+  border: none;
+  cursor: pointer;
 }
 </style>

@@ -25,27 +25,6 @@
       <p><strong>Protocolo:</strong> {{ selectedPacket.protocolo == 6 ? "TCP" : selectedPacket.protocolo == 2 ? "ICMP" : "UDP"}}</p>
     </div>
 
-    <div v-if="packets.type === 2 && selectedRIP" class="node-info">
-      <div v-for="(packet, index) in packets.data" :key="index">
-        <p><strong>IP de Origem:</strong> {{ packet.source_ip }}</p>
-        <p><strong>IP de Destino:</strong> {{ packet.destination_ip }}</p>
-        <p><strong>Tipo de Comando:</strong> {{ packet.command_type }}</p>
-        <p><strong>Versão:</strong> {{ packet.version }}</p>
-
-        <template v-if="packet.entries.length">
-          <strong>Entries:</strong>
-          <ul>
-            <li v-for="(entry, entryIndex) in packet.entries" :key="entryIndex">
-              <p><strong>Família de Endereço:</strong> {{ entry.address_family }}</p>
-              <p><strong>Route Tag:</strong> {{ entry.route_tag }}</p>
-              <p><strong>Endereço IP:</strong> {{ entry.ip_address }}</p>
-              <p><strong>Próximo Salto:</strong> {{ entry.next_hop }}</p>
-              <p><strong>Métrica:</strong> {{ entry.metric }}</p>
-            </li>
-          </ul>
-        </template>
-      </div>
-    </div>
   </div>
 </template>
 
@@ -178,6 +157,8 @@ export default {
         this.generateArpNodes();
       } else if( this.packets.type == 2){
         this.generateRipNodes();
+      } else if( this.packets.type == 3){
+        this.generateUdpNodes();
       }
     },
 
@@ -275,7 +256,34 @@ export default {
       }
     },
 
+    generateUdpNodes() {
+      this.generateIpsList();
 
+      this.nodes = [];
+      this.edges = [];
+
+      this.ips.forEach((ip, index) => {
+        const nodeIndex = index + 1;
+        const nodeName = `node${nodeIndex}`;
+        this.nodes[nodeName] = { name: ip, edgeWidth: 1, hue: 200 };
+      });
+
+      this.packets.data.forEach((packet, index) => {
+        const sourceNodeIndex = this.ips.indexOf(packet.ip_origem) + 1;
+        const sourceNodeName = `node${sourceNodeIndex}`;
+        const targetNodeIndex = this.ips.indexOf(packet.ip_destino) + 1;
+        const targetNodeName = `node${targetNodeIndex}`;
+        const edgeName = `edge${index + 1}`;
+
+        this.edges[edgeName] = {
+          source: sourceNodeName,
+          target: targetNodeName,
+          edgeWidth: 1,
+          hue: hues[Math.floor(Math.random() * hues.length)],
+        };
+      });
+    },
+    
     generateIpsList() {
       const ipsOrigem = this.packets.data.map(pacote => pacote.ip_origem);
       const ipsDestino = this.packets.data.map(pacote => pacote.ip_destino);

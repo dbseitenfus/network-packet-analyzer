@@ -21,6 +21,7 @@
         <graphics-page v-if="showGraphicsIPv4" :packets="packets" />
         <packet-traffic v-if="showGraphicsARP" :packetData="packets.data" />
         <rip-nodes-table v-if="showInfoRIP" :ripNodes="packets.data" />
+        <udp-nodes-table v-if="showInfoUDP" :udpNodes="packets.data" />
         <button class="modal-close-btn" @click="fecharModalGraficosIPv4">Fechar</button>
       </div>
     </div>
@@ -48,6 +49,7 @@ import { CloudUpload, BarChart, InformationCircle } from "@vicons/ionicons5";
 import GraphicsPage from './GraphicsPage.vue';
 import PacketTraffic from './PacketTraffic.vue';
 import RipNodesTable from './RipNodesTable.vue'; 
+import UdpNodesTable from './UdpNodesTable.vue'; 
 
 export default {
   name: 'DashboardPackages',
@@ -59,7 +61,8 @@ export default {
     InformationCircle,
     GraphicsPage,
     PacketTraffic,
-    RipNodesTable
+    RipNodesTable,
+    UdpNodesTable
   },
   data() {
     return {
@@ -73,6 +76,7 @@ export default {
       showGraphicsIPv4: false,
       showGraphicsARP: false,
       showInfoRIP: false,
+      showInfoUDP: false,
     };
   },
   methods: {
@@ -117,11 +121,11 @@ export default {
             this.showGraphButton = false;
             this.showInfoButton = true;
           } else if (protocolName === "udp") {
-            this.packets.type = 3; // UDP (exemplo)
+            this.packets.type = 3; // UDP
             const response = await this.getUdpPackets(formData);
             this.packets.data = response.data.pacotes;
-            this.showGraphButton = false; // Mostra o botão de gráfico
-            this.showInfoButton = false;
+            this.showGraphButton = false;
+            this.showInfoButton = true;
           } else {
             throw new Error("Protocolo não suportado: " + protocolName);
           }
@@ -141,6 +145,8 @@ export default {
         this.showGraphicsARP = true;
       } else if (this.packets.type === 2) {
         this.showInfoRIP = true;
+      } else if (this.packets.type === 3) {
+        this.showInfoUDP = true;
       }
     },
 
@@ -152,6 +158,8 @@ export default {
         this.showGraphicsARP = false;
       } else if (this.packets.type === 2) {
         this.showInfoRIP = false;
+      } else if (this.packets.type === 3) {
+        this.showInfoUDP = false;
       }
     },
 
@@ -192,6 +200,14 @@ export default {
 
     async getRipPackets(formData) {
       return await axios.post("http://localhost:8000/rip/listar_pacotes", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data"
+        }
+      });
+    },
+
+    async getUdpPackets(formData) {
+      return await axios.post("http://localhost:8000/udp/list_packages", formData, {
         headers: {
           "Content-Type": "multipart/form-data"
         }

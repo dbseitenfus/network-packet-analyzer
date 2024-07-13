@@ -307,3 +307,4 @@ def calcular_checksum(data):
 @app.get("/ips_bloqueados")
 async def get_ips_bloqueados():
     return {"ips_bloqueados": list(ips_bloqueados.keys())}
+    

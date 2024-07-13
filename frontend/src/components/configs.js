@@ -11,7 +11,7 @@ export function configs() {
     },
 
     node: {
-      label: { visible: true }
+      label: { visible: true },
     },
 
     edge: {

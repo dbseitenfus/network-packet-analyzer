@@ -7,6 +7,8 @@ from collections import Counter
 import requests
 import uvicorn
 from netaddr import EUI
+import struct
+from datetime import datetime, timedelta
 
 app = FastAPI()
 
@@ -21,6 +23,10 @@ app.add_middleware(
 
 # Lista para armazenar os pacotes
 pacotes = []
+
+pacotes_udp_por_ip = {}
+limite_pacotes_por_segundo = 100
+ips_bloqueados = {}
 
 @app.get("/")
 def read_root():
@@ -106,7 +112,7 @@ async def listar_pacotes_arp(pcap_file: UploadFile = File(...)):
 @app.post("/rip/listar_pacotes")
 async def listar_pacotes_rip(pcap_file: UploadFile = File(...)):
     global pacotes_rip
-    pacotes_rip = []  # Limpa a lista global de pacotes RIP
+    pacotes_rip = [] 
     conteudo = await pcap_file.read()
     captura = dpkt.pcap.Reader(io.BytesIO(conteudo))
 
@@ -153,6 +159,31 @@ async def listar_pacotes_rip(pcap_file: UploadFile = File(...)):
 
     return {"message": "Pacotes RIP processados com sucesso", "pacotes": pacotes_rip}
 
+def detectar_anomalias(ip, udp):
+    anomalias = []
+
+    # Portas comuns UDP
+    portas_comuns = {53, 67, 68, 123, 161, 162, 500, 514, 1812, 1813}
+
+    # Porta incomum
+    if udp.sport not in portas_comuns and udp.dport not in portas_comuns:
+        anomalias.append("Porta incomum")
+        registrar_ip_para_ddos(dpkt.utils.inet_to_str(ip.src))  # Registrar IP para DDoS
+
+    # Comprimento inesperado
+    if udp.ulen < 8 or udp.ulen > 512: 
+        anomalias.append("Comprimento inesperado")
+        registrar_ip_para_ddos(dpkt.utils.inet_to_str(ip.src)) 
+
+    # Checksum inválido
+    udp_pseudo_header = struct.pack('!4s4sBBH', ip.src, ip.dst, 0, dpkt.ip.IP_PROTO_UDP, udp.ulen)
+    udp_data = udp_pseudo_header + bytes(udp)
+    if calcular_checksum(udp_data) != 0:
+        anomalias.append("Checksum inválido")
+        registrar_ip_para_ddos(dpkt.utils.inet_to_str(ip.src))
+
+    return anomalias
+
 @app.post("/udp/list_packages")
 async def listar_pacotes_udp(pcap_file: UploadFile = File(...)):
     global pacotes_udp
@@ -169,16 +200,110 @@ async def listar_pacotes_udp(pcap_file: UploadFile = File(...)):
             ip = pacote_eth.data
             udp = ip.data
 
+            # Identificar protocolos específicos
+            protocolo = "Desconhecido"
+            porta_origem = udp.sport
+            porta_destino = udp.dport
+
+            # Identificação por portas conhecidas
+            if porta_destino == 53:
+                protocolo = "DNS"
+            elif porta_destino == 123:
+                protocolo = "NTP"
+            elif porta_destino == 161:
+                protocolo = "SNMP"
+            elif porta_destino == 514:
+                protocolo = "Syslog"
+            elif porta_destino == 1900:
+                protocolo = "SSDP"
+            elif porta_destino == 389:
+                protocolo = "CLDAP"
+            
+            # Verificar se o pacote é ICMP
+            if isinstance(ip.data, dpkt.icmp.ICMP):
+                protocolo = "ICMP"
+
+            # Detectar anomalias
+            anomalias = detectar_anomalias(ip, udp)
+
             # Adicionar informações do pacote UDP à lista
             pacotes_udp.append({
                 "timestamp": timestamp,
                 "ip_origem": dpkt.utils.inet_to_str(ip.src),
                 "ip_destino": dpkt.utils.inet_to_str(ip.dst),
-                "porta_origem": udp.sport,
-                "porta_destino": udp.dport,
+                "porta_origem": porta_origem,
+                "porta_destino": porta_destino,
                 "comprimento": udp.ulen,
                 "checksum": udp.sum,
-                "dados": udp.data.hex()
+                "dados": udp.data.hex(),
+                "protocolo": protocolo,
+                "anomalias": anomalias
             })
 
+             # Verificar e registrar o IP de origem para detecção de DDoS
+            ip_origem = dpkt.utils.inet_to_str(ip.src)
+            registrar_ip_para_ddos(ip_origem)
+            
     return {"mensagem": "Pacotes UDP processados com sucesso", "pacotes": pacotes_udp}
+
+def registrar_ip_para_ddos(ip_origem):
+    global pacotes_udp_por_ip
+
+    # Registrar o IP e a contagem de pacotes UDP
+    if ip_origem in pacotes_udp_por_ip:
+        pacotes_udp_por_ip[ip_origem]["count"] += 1
+        pacotes_udp_por_ip[ip_origem]["last_seen"] = datetime.now()
+    else:
+        pacotes_udp_por_ip[ip_origem] = {
+            "count": 1,
+            "first_seen": datetime.now(),
+            "last_seen": datetime.now()
+        }
+
+    # Verificar se o IP está gerando tráfego excessivo
+    verificar_ddos(ip_origem)
+
+def verificar_ddos(ip_origem):
+    global pacotes_udp_por_ip, limite_pacotes_por_segundo
+
+    # Verificar se o IP está na lista de pacotes UDP por IP
+    if ip_origem in pacotes_udp_por_ip:
+        # Calcular o tempo decorrido desde o primeiro e último pacote
+        tempo_decorrido = (datetime.now() - pacotes_udp_por_ip[ip_origem]["first_seen"]).total_seconds()
+        pacotes_por_segundo = pacotes_udp_por_ip[ip_origem]["count"] / tempo_decorrido
+
+        # Verificar se a taxa de pacotes por segundo excede o limite
+        if pacotes_por_segundo > limite_pacotes_por_segundo:
+            # Verificar se o IP já está bloqueado
+            if ip_origem in ips_bloqueados:
+                # Verificar se o tempo de bloqueio já expirou
+                if datetime.now() > ips_bloqueados[ip_origem]:
+                    # Remover o IP da lista de bloqueados
+                    del ips_bloqueados[ip_origem]
+                else:
+                    return  # IP ainda está bloqueado, não fazer nada
+            else:
+                # Bloquear o IP
+                tempo_bloqueio = timedelta(seconds=3)
+                tempo_desbloqueio = datetime.now() + tempo_bloqueio
+                ips_bloqueados[ip_origem] = tempo_desbloqueio
+                print(f"IP bloqueado por 5 minutos: {ip_origem}")
+
+def calcular_checksum(data):
+    if len(data) % 2 == 1:
+        data += b'\x00'
+
+    checksum = 0
+    for i in range(0, len(data), 2):
+        word = (data[i] << 8) + data[i + 1]
+        checksum += word
+
+    while (checksum >> 16) > 0:
+        checksum = (checksum & 0xFFFF) + (checksum >> 16)
+
+    checksum = ~checksum & 0xFFFF
+    return checksum
+
+@app.get("/ips_bloqueados")
+async def get_ips_bloqueados():
+    return {"ips_bloqueados": list(ips_bloqueados.keys())}

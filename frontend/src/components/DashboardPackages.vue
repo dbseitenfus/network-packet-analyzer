@@ -1,31 +1,38 @@
 <template>
   <div class="page">
+    <!-- Botão para mostrar gráficos -->
     <label for="showGraphBtn" class="float-button-top btn-floating-top" v-if="showGraphButton">
-      <div class="icon-container" @click="mostrarModalGraficos">
+      <div class="icon-container" @click="mostrarModalGraficos('graph')">
         <n-icon size="24">
           <bar-chart/>
         </n-icon>
       </div>
     </label>
 
-    <label for="showGraphBtn" class="float-button-top btn-floating-top" v-if="showInfoButton">
-      <div class="icon-container" @click="mostrarModalGraficos">
+    <!-- Botão para mostrar informações -->
+    <label for="showInfoBtn" class="float-button-top btn-floating-top info-button" v-if="showInfoButton">
+      <div class="icon-container" @click="mostrarModalGraficos('info')">
         <n-icon size="24">
           <information-circle/>
         </n-icon>
       </div>
     </label>
 
+    <!-- Modal de gráficos/informações -->
     <div v-if="showModalGraphics" class="modal-background">
       <div class="modal-content">
+        <span class="close" @click="fecharModalGraficosIPv4">&times;</span>
+
         <graphics-page v-if="showGraphicsIPv4" :packets="packets" />
         <packet-traffic v-if="showGraphicsARP" :packetData="packets.data" />
         <rip-nodes-table v-if="showInfoRIP" :ripNodes="packets.data" />
         <udp-nodes-table v-if="showInfoUDP" :udpNodes="packets.data" />
-        <button class="modal-close-btn" @click="fecharModalGraficosIPv4">Fechar</button>
+        <udp-graphics v-if="showGraphicsUDP" :udpNodes="packets.data" />
+        
       </div>
     </div>
 
+    <!-- Botão de upload de arquivo -->
     <label for="fileInput" class="float-button btn-floating">
       <div class="icon-container">
         <n-icon size="24">
@@ -35,6 +42,7 @@
     </label>
     <input id="fileInput" ref="fileInput" type="file" style="display: none" @change="uploadArquivo">
     
+    <!-- Container do gráfico de rede -->
     <div class="graph-container">
       <network-graph class="graph" :packets="packets" />
     </div>
@@ -50,6 +58,7 @@ import GraphicsPage from './GraphicsPage.vue';
 import PacketTraffic from './PacketTraffic.vue';
 import RipNodesTable from './RipNodesTable.vue'; 
 import UdpNodesTable from './UdpNodesTable.vue'; 
+import UdpGraphics from './UdpGraphics.vue';
 
 export default {
   name: 'DashboardPackages',
@@ -62,7 +71,8 @@ export default {
     GraphicsPage,
     PacketTraffic,
     RipNodesTable,
-    UdpNodesTable
+    UdpNodesTable,
+    UdpGraphics
   },
   data() {
     return {
@@ -75,6 +85,7 @@ export default {
       showModalGraphics: false,
       showGraphicsIPv4: false,
       showGraphicsARP: false,
+      showGraphicsUDP: false,
       showInfoRIP: false,
       showInfoUDP: false,
     };
@@ -124,7 +135,7 @@ export default {
             this.packets.type = 3; // UDP
             const response = await this.getUdpPackets(formData);
             this.packets.data = response.data.pacotes;
-            this.showGraphButton = false;
+            this.showGraphButton = true;
             this.showInfoButton = true;
           } else {
             throw new Error("Protocolo não suportado: " + protocolName);
@@ -137,30 +148,32 @@ export default {
       }
     },
 
-    mostrarModalGraficos() {
+    mostrarModalGraficos(type) {
       this.showModalGraphics = true;
-      if (this.packets.type === 0) {
-        this.showGraphicsIPv4 = true;
-      } else if (this.packets.type === 1) {
-        this.showGraphicsARP = true;
-      } else if (this.packets.type === 2) {
-        this.showInfoRIP = true;
-      } else if (this.packets.type === 3) {
-        this.showInfoUDP = true;
+      if (type === 'graph') {
+        if (this.packets.type === 0) {
+          this.showGraphicsIPv4 = true;
+        } else if (this.packets.type === 1) {
+          this.showGraphicsARP = true;
+        } else if (this.packets.type === 3) {
+          this.showGraphicsUDP = true;
+        }
+      } else if (type === 'info') {
+        if (this.packets.type === 2) {
+          this.showInfoRIP = true;
+        } else if (this.packets.type === 3) {
+          this.showInfoUDP = true;
+        }
       }
     },
 
     fecharModalGraficosIPv4() {
       this.showModalGraphics = false;
-      if (this.packets.type === 0) {
-        this.showGraphicsIPv4 = false;
-      } else if (this.packets.type === 1) {
-        this.showGraphicsARP = false;
-      } else if (this.packets.type === 2) {
-        this.showInfoRIP = false;
-      } else if (this.packets.type === 3) {
-        this.showInfoUDP = false;
-      }
+      this.showGraphicsIPv4 = false;
+      this.showGraphicsARP = false;
+      this.showGraphicsUDP = false;
+      this.showInfoRIP = false;
+      this.showInfoUDP = false;
     },
 
     getFileExtension(fileName) {
@@ -239,6 +252,10 @@ export default {
   z-index: 9999;
 }
 
+.info-button {
+  top: 80px;
+}
+
 .btn-floating, .btn-floating-top {
   background-color: #232343;
   color: white;
@@ -270,7 +287,7 @@ export default {
 .graph {
   width: 100%;
   height: 100%;
-  background-color: aqua;
+  background-color: rgb(222, 235, 235);
 }
 
 .modal-background {
@@ -305,4 +322,19 @@ export default {
   border: none;
   cursor: pointer;
 }
+
+.close {
+  color: #aaa;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+  color: black;
+  text-decoration: none;
+  cursor: pointer;
+}
+
 </style>

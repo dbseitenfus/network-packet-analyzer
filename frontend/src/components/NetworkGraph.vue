@@ -11,26 +11,26 @@
           v-bind="slotProps"
           :ref="nodeId"
           :r="config.radius * scale"
-          fill="white"
-          stroke="lightgrey"
+          :fill="nodes[nodeId].blocked ? 'black' : `hsl(${nodes[nodeId].hue}, 50%, 50%)`"
+          :stroke="nodes[nodeId].strokeColor ?? 'white'"
           :stroke-width="size.default"
         />
       </template>
     </v-network-graph>
-    
+
     <div v-if="packets.type === 0 && selectedNode" class="node-info">
       <p><strong>ID:</strong> {{ selectedPacket.identificacao }}</p>
       <p><strong>IP:</strong> {{ nodes[selectedNode].name }}</p>
       <p><strong>TTL:</strong> {{ selectedPacket.ttl }}</p>
       <p><strong>Protocolo:</strong> {{ selectedPacket.protocolo == 6 ? "TCP" : selectedPacket.protocolo == 2 ? "ICMP" : "UDP"}}</p>
     </div>
-
   </div>
 </template>
 
 <script>
 import { nodes, edges, size, hues } from "./data";
 import { configs } from "./configs";
+import axios from "axios";
 
 export default {
   props: {
@@ -78,7 +78,7 @@ export default {
   watch: {
     packets: {
       handler(newPackets) {
-        if (newPackets.data.length > 0) {
+        if (newPackets && newPackets.data && newPackets.data.length > 0) {
           this.generateNodes();
         }
       },
@@ -90,6 +90,7 @@ export default {
       }
     }
   },
+
 
   methods: {
     handleHoverNode(node, size, color) {
@@ -132,9 +133,9 @@ export default {
     },
 
     handleHoverEdge(edge, size, color) {
-      const edgeData = this.edges[edge]; // Acessa o objeto de edge diretamente
+      const edgeData = this.edges[edge]; 
 
-      if (edgeData) { // Verifica se edgeData está definido
+      if (edgeData) { 
         const { source, target, hue } = edgeData;
         const defaultColor = `hsl(${hue}, 50%, 50%)`;
 
@@ -159,6 +160,7 @@ export default {
         this.generateRipNodes();
       } else if( this.packets.type == 3){
         this.generateUdpNodes();
+        this.fetchBlockedIPs();
       }
     },
 
@@ -257,6 +259,10 @@ export default {
     },
 
     generateUdpNodes() {
+      if (!this.packets || !this.packets.data || this.packets.data.length === 0) {
+        return;
+      }
+
       this.generateIpsList();
 
       this.nodes = [];
@@ -265,7 +271,7 @@ export default {
       this.ips.forEach((ip, index) => {
         const nodeIndex = index + 1;
         const nodeName = `node${nodeIndex}`;
-        this.nodes[nodeName] = { name: ip, edgeWidth: 1, hue: 200 };
+        this.nodes[nodeName] = { name: ip, edgeWidth: 1, hue: 200, blocked: false }; // Inicializa com cor padrão (azul)
       });
 
       this.packets.data.forEach((packet, index) => {
@@ -275,15 +281,88 @@ export default {
         const targetNodeName = `node${targetNodeIndex}`;
         const edgeName = `edge${index + 1}`;
 
+        // Adicionar checagem de anomalia
+        if (packet.anomalias && packet.anomalias.length > 0) {
+          this.nodes[sourceNodeName].hue = 0; // Define a cor para vermelho
+          this.nodes[targetNodeName].hue = 0; // Define a cor para vermelho
+        }
+
         this.edges[edgeName] = {
           source: sourceNodeName,
           target: targetNodeName,
           edgeWidth: 1,
           hue: hues[Math.floor(Math.random() * hues.length)],
-        };
+        };        
       });
     },
+
+    async fetchBlockedIPs() {
+      try {
+        const response = await axios.get("http://localhost:8000/ips_bloqueados");
+        this.blockedIPs = response.data.ips_bloqueados;
+
+        // Após 3 segundos, bloqueia os IPs
+        setTimeout(() => {
+          this.blockIPs();
+        }, 3000);
+
+        // Após 8 segundos, desbloqueia os IPs
+        setTimeout(() => {
+          this.unblockIPs();
+        }, 8000);
+      } catch (error) {
+        console.error("Erro ao buscar IPs bloqueados:", error);
+      }
+    },
     
+    blockIPs() {
+      this.blockedIPs.forEach(ip => {
+        const node = Object.values(this.nodes).find(node => node.name === ip);
+        if (node) {
+          node.blocked = true; 
+          this.updateNodeStyle(node.id);
+        }
+      });
+    },
+
+    unblockIPs() {
+      this.blockedIPs.forEach(ip => {
+        const node = Object.values(this.nodes).find(node => node.name === ip);
+        if (node) {
+          node.blocked = false; 
+          this.updateNodeStyle(node.id);
+        }
+      });
+    },
+
+    updateNodeStyle(nodeId) {
+      const defaultColor = "blue";
+
+      if (this.$refs[nodeId]) {
+        this.$refs[nodeId].style.stroke = defaultColor;
+        this.$refs[nodeId].style.strokeWidth = this.size.default + 2;
+      }
+    },
+
+    async checkBlockedIPsExpiry() {
+      const currentTimestamp = new Date().getTime();
+
+      // Itera sobre os IPs bloqueados para verificar se algum já pode ser desbloqueado
+      Object.keys(this.blockedIPs).forEach(ip => {
+        if (this.blockedIPs[ip] <= currentTimestamp) {
+          // Remove o IP da lista de bloqueados
+          delete this.blockedIPs[ip];
+
+          const node = Object.values(this.nodes).find(node => node.name === ip);
+          if (node) {
+            node.blocked = false;
+          }
+
+          console.log(`IP desbloqueado automaticamente: ${ip}`);
+        }
+      });
+    },
+
     generateIpsList() {
       const ipsOrigem = this.packets.data.map(pacote => pacote.ip_origem);
       const ipsDestino = this.packets.data.map(pacote => pacote.ip_destino);

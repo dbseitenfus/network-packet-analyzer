@@ -227,35 +227,37 @@ export default {
       this.nodes = [];
       this.edges = [];
 
-      // Mapa para rastrear nós únicos por IP
+      // Mapear para rastrear nós únicos por IP
       const ipToNodeMap = new Map();
 
-      // Processar cada pacote RIP para criar nós e arestas
-      if (Array.isArray(this.packets.data)) {
-        this.packets.data.forEach((packet, index) => {
-          const sourceIp = packet.source_ip;
-          const destinationIp = packet.destination_ip;
+      // Processar cada nó e aresta da topologia de rede RIP
+      this.packets.data.forEach((entry, index) => {
+        const nodeId = `node${index + 1}`;
+        this.nodes.push({
+          id: nodeId,
+          name: entry.ip,
+          edgeWidth: 1,
+          hue: 200, // Ajuste conforme necessário
+          blocked: false // Defina como necessário para sua lógica
+        });
+        ipToNodeMap.set(entry.ip, nodeId);
+      });
 
-          // Verificar e adicionar nós se não existirem
-          if (!ipToNodeMap.has(sourceIp)) {
-            ipToNodeMap.set(sourceIp, { id: `node${this.nodes.length + 1}`, name: sourceIp });
-            this.nodes.push(ipToNodeMap.get(sourceIp));
-          }
-          if (!ipToNodeMap.has(destinationIp)) {
-            ipToNodeMap.set(destinationIp, { id: `node${this.nodes.length + 1}`, name: destinationIp });
-            this.nodes.push(ipToNodeMap.get(destinationIp));
-          }
 
-          // Criar aresta entre os nós
-          const sourceNode = ipToNodeMap.get(sourceIp);
-          const targetNode = ipToNodeMap.get(destinationIp);
+
+      this.packets.network.edges.forEach((edge, index) => {
+        const sourceNode = ipToNodeMap.get(edge.source);
+        const targetNode = ipToNodeMap.get(edge.target);
+        if (sourceNode && targetNode) {
           this.edges.push({
             id: `edge${index + 1}`,
-            source: sourceNode.id,
-            target: targetNode.id,
+            source: sourceNode,
+            target: targetNode,
+            edgeWidth: 1,
+            hue: hues[Math.floor(Math.random() * hues.length)], // Ajuste conforme necessário
           });
-        });
-      }
+        }
+      });
     },
 
     generateUdpNodes() {
@@ -294,6 +296,20 @@ export default {
           hue: hues[Math.floor(Math.random() * hues.length)],
         };        
       });
+    },
+
+    convertPacketsToObject() {
+      if (!this.packets || !this.packets.data || this.packets.data.length === 0) {
+        return;
+      }
+
+      const packetsObject = this.packets.data.reduce((obj, packet) => {
+        const key = `${packet.ip_origem}-${packet.ip_destino}`;
+        obj[key] = packet;
+        return obj;
+      }, {});
+
+      this.packetsObject = packetsObject;
     },
 
     async fetchBlockedIPs() {
@@ -419,6 +435,4 @@ body {
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
   text-align: justify;
 }
-
-
 </style>

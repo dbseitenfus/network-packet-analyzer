@@ -42,8 +42,10 @@
     </label>
     <input id="fileInput" ref="fileInput" type="file" style="display: none" @change="uploadArquivo">
     
-    <!-- Container do gráfico de rede -->
-    <div class="graph-container">
+    <div v-if="packets.type == 4">
+      <analise-tcp class="graph" :packets="packets" />
+    </div>
+    <div v-else class="graph-container">
       <network-graph class="graph" :packets="packets" />
     </div>
   </div>
@@ -59,6 +61,7 @@ import PacketTraffic from './PacketTraffic.vue';
 import RipNodesTable from './RipNodesTable.vue'; 
 import UdpNodesTable from './UdpNodesTable.vue'; 
 import UdpGraphics from './UdpGraphics.vue';
+import AnaliseTcp from './AnaliseTcp.vue';
 
 export default {
   name: 'DashboardPackages',
@@ -72,13 +75,15 @@ export default {
     PacketTraffic,
     RipNodesTable,
     UdpNodesTable,
-    UdpGraphics
+    UdpGraphics,
+    AnaliseTcp
   },
   data() {
     return {
       packets: {
         type: -1,
-        data: []
+        data: [],
+        network: []
       },
       showGraphButton: false,
       showInfoButton: false,
@@ -113,6 +118,7 @@ export default {
           this.showInfoButton = false;
         } else if (fileExtension === "pcap") {
           const protocolName = this.getProtocolName(arquivo.name);
+         
           if (protocolName === "ipv4") {
             this.packets.type = 0; // IPv4
             const response = await this.getIpv4Packets(formData);
@@ -129,7 +135,8 @@ export default {
             this.packets.type = 2; // RIP 
             const response = await this.getRipPackets(formData);
             this.packets.data = response.data.pacotes;
-            this.showGraphButton = false;
+            this.packets.network = response.data.network_topology;
+            this.showGraphButton = true;
             this.showInfoButton = true;
           } else if (protocolName === "udp") {
             this.packets.type = 3; // UDP
@@ -137,6 +144,14 @@ export default {
             this.packets.data = response.data.pacotes;
             this.showGraphButton = true;
             this.showInfoButton = true;
+          } else if (protocolName === "tcp") {
+            this.packets.type = 4; // TCP
+            const response = await this.getTcpPackets(formData);
+            console.log(response)
+            this.packets.data = response.data.pacotes;
+            this.packets.network = response.data.conexoes;
+            this.showGraphButton = false;
+            this.showInfoButton = false;
           } else {
             throw new Error("Protocolo não suportado: " + protocolName);
           }
@@ -190,6 +205,8 @@ export default {
         return "rip";
       } else if (baseName.includes("udp")) {
         return "udp";
+      } else if (baseName.includes("tcp")) {
+        return "tcp";
       } else {
         throw new Error("Protocolo não identificado pelo nome do arquivo.");
       }
@@ -226,6 +243,14 @@ export default {
         }
       });
     },
+
+    async getTcpPackets(formData) {
+      return await axios.post("http://localhost:8000/tcp/list_packages", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data"
+        }
+      });
+    },
   },
 };
 </script>
@@ -235,7 +260,7 @@ export default {
   display: flex;
   flex-direction: column;
   height: 100vh;
-  overflow: hidden;
+  min-height: 100vh; 
 }
 
 .float-button {

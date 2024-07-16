@@ -28,6 +28,7 @@
         <rip-nodes-table v-if="showInfoRIP" :ripNodes="packets.data" />
         <udp-nodes-table v-if="showInfoUDP" :udpNodes="packets.data" />
         <udp-graphics v-if="showGraphicsUDP" :udpNodes="packets.data" />
+        <dns-nodes-table v-if="showInfoDNS" :dnsPackages="packets.data" />
         
       </div>
     </div>
@@ -65,6 +66,7 @@ import RipNodesTable from './RipNodesTable.vue';
 import UdpNodesTable from './UdpNodesTable.vue'; 
 import UdpGraphics from './UdpGraphics.vue';
 import AnaliseTcp from './AnaliseTcp.vue';
+import DnsNodesTable from './DnsNodesTable.vue';
 import RipGraphics from './RipGraphics.vue';
 
 export default {
@@ -81,6 +83,7 @@ export default {
     UdpNodesTable,
     UdpGraphics,
     AnaliseTcp,
+    DnsNodesTable,
     RipGraphics
   },
   data() {
@@ -98,6 +101,7 @@ export default {
       showGraphicsUDP: false,
       showInfoRIP: false,
       showInfoUDP: false,
+      showInfoDNS: false
     };
   },
   methods: {
@@ -153,6 +157,13 @@ export default {
             this.packets.network = response.data.conexoes;
             this.showGraphButton = false;
             this.showInfoButton = false;
+          } else if (protocolName === "dns") {
+            this.packets.type = 5; // DNS
+            const response = await this.getDnsPackets(formData);
+            console.log(response)
+            this.packets.data = response.data.pacotes;
+            this.showGraphButton = false;
+            this.showInfoButton = true;
           } else {
             throw new Error("Protocolo não suportado: " + protocolName);
           }
@@ -179,6 +190,8 @@ export default {
           this.showInfoRIP = true;
         } else if (this.packets.type === 3) {
           this.showInfoUDP = true;
+        } else if(this.packets.type === 5) {
+          this.showInfoDNS = true;
         }
       }
     },
@@ -208,6 +221,8 @@ export default {
         return "udp";
       } else if (baseName.includes("tcp")) {
         return "tcp";
+      } else if (baseName.includes("dns")) {
+        return "dns";
       } else {
         throw new Error("Protocolo não identificado pelo nome do arquivo.");
       }
@@ -247,6 +262,14 @@ export default {
 
     async getTcpPackets(formData) {
       return await axios.post("http://localhost:8000/tcp/list_packages", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data"
+        }
+      });
+    },
+
+    async getDnsPackets(formData) {
+      return await axios.post("http://localhost:8000/dns/listar_pacotes", formData, {
         headers: {
           "Content-Type": "multipart/form-data"
         }

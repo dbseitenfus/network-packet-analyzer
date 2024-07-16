@@ -45,6 +45,9 @@
     <div v-if="packets.type == 4">
       <analise-tcp class="graph" :packets="packets" />
     </div>
+    <div v-if="packets.type == 2">
+      <rip-graphics class="graph" :packets="packets" />
+    </div>
     <div v-else class="graph-container">
       <network-graph class="graph" :packets="packets" />
     </div>
@@ -62,6 +65,7 @@ import RipNodesTable from './RipNodesTable.vue';
 import UdpNodesTable from './UdpNodesTable.vue'; 
 import UdpGraphics from './UdpGraphics.vue';
 import AnaliseTcp from './AnaliseTcp.vue';
+import RipGraphics from './RipGraphics.vue';
 
 export default {
   name: 'DashboardPackages',
@@ -76,7 +80,8 @@ export default {
     RipNodesTable,
     UdpNodesTable,
     UdpGraphics,
-    AnaliseTcp
+    AnaliseTcp,
+    RipGraphics
   },
   data() {
     return {
@@ -135,9 +140,6 @@ export default {
             this.packets.type = 2; // RIP 
             const response = await this.getRipPackets(formData);
             this.packets.data = response.data.pacotes;
-            this.packets.network = response.data.network_topology;
-            this.showGraphButton = true;
-            this.showInfoButton = true;
           } else if (protocolName === "udp") {
             this.packets.type = 3; // UDP
             const response = await this.getUdpPackets(formData);
@@ -147,7 +149,6 @@ export default {
           } else if (protocolName === "tcp") {
             this.packets.type = 4; // TCP
             const response = await this.getTcpPackets(formData);
-            console.log(response)
             this.packets.data = response.data.pacotes;
             this.packets.network = response.data.conexoes;
             this.showGraphButton = false;

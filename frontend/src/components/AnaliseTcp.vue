@@ -1,22 +1,24 @@
 <template>
-  <div class="flag-count-chart">
-    <!-- Gráfico de contagem de flags e retransmissões lado a lado -->
-    <div class="top-charts">
-      <div class="chart-container">
-        <h2>Contagem de Flags</h2>
-        <canvas ref="flagChartCanvas" width="300" height="250"></canvas>
+  <div class="central-container">
+    <div class="flag-count-chart">
+      <!-- Gráfico de contagem de flags e retransmissões lado a lado -->
+      <div class="top-charts">
+        <div class="chart-container">
+          <h2>Contagem de Flags</h2>
+          <canvas ref="flagChartCanvas" width="300" height="250"></canvas>
+        </div>
+
+        <div class="chart-container">
+          <h2>Contagem de Retransmissões</h2>
+          <canvas ref="retransmissionChartCanvas" width="300" height="250"></canvas>
+        </div>
       </div>
 
-      <div class="chart-container">
-        <h2>Contagem de Retransmissões</h2>
-        <canvas ref="retransmissionChartCanvas" width="300" height="250"></canvas>
+      <!-- Gráfico de tempo de resposta abaixo dos outros dois -->
+      <div class="chart-container wide">
+        <h2>Tempo de resposta: SIN e ACK</h2>
+        <canvas ref="responseTimeChartCanvas" width="600" height="230"></canvas>
       </div>
-    </div>
-
-    <!-- Gráfico de tempo de resposta abaixo dos outros dois -->
-    <div class="chart-container wide">
-      <h2>Tempo de resposta: SIN e ACK</h2>
-      <canvas ref="responseTimeChartCanvas" width="600" height="230"></canvas>
     </div>
   </div>
 </template>
@@ -237,26 +239,37 @@ export default {
 </script>
 
 <style scoped>
+.central-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
 
 .flag-count-chart {
-  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
 }
 
 .top-charts {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   width: 100%;
   max-width: 1200px;
 }
 
 .chart-container {
-  width: 45%; 
+  width: 45%;
   height: 500px;
   margin-bottom: 10px;
 }
 
 .chart-container.wide {
   width: 90%;
-  margin-top: 60px 10px;
+  margin: 60px 10px 10px;
 }
 </style>

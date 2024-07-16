@@ -16,7 +16,7 @@ app = FastAPI()
 # Configuração do middleware CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:8080"],
+    allow_origins=["*"],  # Permitir todas as origens
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -402,3 +402,60 @@ async def listar_pacotes_tcp(pcap_file: UploadFile = File(...), limite: int = 12
                 pacote["tempo_resposta"] = ack_timestamp - syn_timestamp
 
     return { "mensagem": "Pacotes TCP processados com sucesso", "pacotes": pacotes_tcp, "conexoes": conexoes }
+
+@app.post("/dns/listar_pacotes")
+async def listar_pacotes_dns(pcap_file: UploadFile = File(...)):
+    pacotes_dns = []
+
+    conteudo = await pcap_file.read()
+    captura = dpkt.pcap.Reader(io.BytesIO(conteudo))
+
+    def rdata_to_str(rdata: bytes) -> str:
+        """Converte rdata para string, detectando se é um endereço IP."""
+        if len(rdata) == 4:  # Assume que rdata com 4 bytes é um IP
+            return dpkt.utils.inet_to_str(rdata)  # Converte bytes em IP
+        return rdata.decode('utf-8', errors='ignore')  # Caso contrário, decodifica como string
+
+    for timestamp, buf in captura:
+        pacote_eth = dpkt.ethernet.Ethernet(buf)
+
+        if isinstance(pacote_eth.data, dpkt.ip.IP):
+            ip = pacote_eth.data
+
+            if isinstance(ip.data, dpkt.udp.UDP) or isinstance(ip.data, dpkt.tcp.TCP):
+                trans = ip.data
+
+                if trans.dport == 53 or trans.sport == 53:
+                    dns = dpkt.dns.DNS(trans.data)
+
+                    queries = []
+                    for query in dns.qd:
+                        queries.append({
+                            "name": query.name.decode('utf-8', errors='ignore') if isinstance(query.name, bytes) else query.name,
+                            "type": query.type,
+                            "class": query.cls
+                        })
+
+                    answers = []
+                    for answer in dns.an:
+                        rdata = rdata_to_str(answer.rdata)  # Converte rdata para string
+                        answers.append({
+                            "name": answer.name.decode('utf-8', errors='ignore') if isinstance(answer.name, bytes) else answer.name,
+                            "type": answer.type,
+                            "class": answer.cls,
+                            "ttl": answer.ttl,
+                            "rdata": rdata
+                        })
+
+                    pacotes_dns.append({
+                        "timestamp": timestamp,
+                        "source_ip": dpkt.utils.inet_to_str(ip.src),
+                        "destination_ip": dpkt.utils.inet_to_str(ip.dst),
+                        "queries": queries,
+                        "answers": answers,
+                        "opcode": dns.opcode,
+                        "rcode": dns.rcode,
+                        "id": dns.id
+                    })
+
+    return {"message": "Pacotes DNS processados com sucesso", "pacotes": pacotes_dns}

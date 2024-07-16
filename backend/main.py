@@ -113,13 +113,8 @@ async def listar_pacotes_arp(pcap_file: UploadFile = File(...)):
 
 @app.post("/rip/listar_pacotes")
 async def listar_pacotes_rip(pcap_file: UploadFile = File(...)):
-    global pacotes_rip, network_topology
+    global pacotes_rip
     pacotes_rip = [] 
-    network_topology = {
-        "nodes": [],
-        "edges": []
-    }
-
     conteudo = await pcap_file.read()
     captura = dpkt.pcap.Reader(io.BytesIO(conteudo))
 
@@ -154,19 +149,6 @@ async def listar_pacotes_rip(pcap_file: UploadFile = File(...)):
                         "metric": entry.metric,
                     })
 
-                    # Adicionar nós (IPs) à lista de nós, se ainda não estiverem presentes
-                    if dpkt.utils.inet_to_str(entry.addr.to_bytes(4, 'big')) not in network_topology["nodes"]:
-                        network_topology["nodes"].append(dpkt.utils.inet_to_str(entry.addr.to_bytes(4, 'big')))
-                    if dpkt.utils.inet_to_str(entry.next_hop.to_bytes(4, 'big')) not in network_topology["nodes"]:
-                        network_topology["nodes"].append(dpkt.utils.inet_to_str(entry.next_hop.to_bytes(4, 'big')))
-
-                    # Adicionar conexões entre nós (roteadores)
-                    network_topology["edges"].append({
-                        "source": dpkt.utils.inet_to_str(entry.addr.to_bytes(4, 'big')),
-                        "target": dpkt.utils.inet_to_str(entry.next_hop.to_bytes(4, 'big')),
-                        "metric": entry.metric
-                    })
-
                 # Adicionar informações do pacote RIP à lista
                 pacotes_rip.append({
                     "timestamp": timestamp,
@@ -177,8 +159,8 @@ async def listar_pacotes_rip(pcap_file: UploadFile = File(...)):
                     "entries": entries,
                 })
 
-    return {"message": "Pacotes RIP processados com sucesso", "pacotes": pacotes_rip, "network_topology": network_topology}
-    
+    return {"message": "Pacotes RIP processados com sucesso", "pacotes": pacotes_rip}
+  
 def detectar_anomalias(ip, udp):
     anomalias = []
 

@@ -157,7 +157,7 @@ export default {
       } else if (this.packets.type === 1) {
         this.generateArpNodes();
       } else if( this.packets.type == 2){
-        this.generateRipNodes();
+        // this.generateRipNodes();
       } else if( this.packets.type == 3){
         this.generateUdpNodes();
         this.fetchBlockedIPs();
@@ -227,37 +227,35 @@ export default {
       this.nodes = [];
       this.edges = [];
 
-      // Mapear para rastrear nós únicos por IP
+      // Mapa para rastrear nós únicos por IP
       const ipToNodeMap = new Map();
 
-      // Processar cada nó e aresta da topologia de rede RIP
-      this.packets.data.forEach((entry, index) => {
-        const nodeId = `node${index + 1}`;
-        this.nodes.push({
-          id: nodeId,
-          name: entry.ip,
-          edgeWidth: 1,
-          hue: 200, 
-          blocked: false
-        });
-        ipToNodeMap.set(entry.ip, nodeId);
-      });
+      // Processar cada pacote RIP para criar nós e arestas
+      if (Array.isArray(this.packets.data)) {
+        this.packets.data.forEach((packet, index) => {
+          const sourceIp = packet.source_ip;
+          const destinationIp = packet.destination_ip;
 
+          // Verificar e adicionar nós se não existirem
+          if (!ipToNodeMap.has(sourceIp)) {
+            ipToNodeMap.set(sourceIp, { id: `node${this.nodes.length + 1}`, name: sourceIp });
+            this.nodes.push(ipToNodeMap.get(sourceIp));
+          }
+          if (!ipToNodeMap.has(destinationIp)) {
+            ipToNodeMap.set(destinationIp, { id: `node${this.nodes.length + 1}`, name: destinationIp });
+            this.nodes.push(ipToNodeMap.get(destinationIp));
+          }
 
-
-      this.packets.network.edges.forEach((edge, index) => {
-        const sourceNode = ipToNodeMap.get(edge.source);
-        const targetNode = ipToNodeMap.get(edge.target);
-        if (sourceNode && targetNode) {
+          // Criar aresta entre os nós
+          const sourceNode = ipToNodeMap.get(sourceIp);
+          const targetNode = ipToNodeMap.get(destinationIp);
           this.edges.push({
             id: `edge${index + 1}`,
-            source: sourceNode,
-            target: targetNode,
-            edgeWidth: 1,
-            hue: hues[Math.floor(Math.random() * hues.length)], 
+            source: sourceNode.id,
+            target: targetNode.id,
           });
-        }
-      });
+        });
+      }
     },
 
     generateUdpNodes() {

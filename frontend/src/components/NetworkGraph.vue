@@ -237,8 +237,8 @@ export default {
           id: nodeId,
           name: entry.ip,
           edgeWidth: 1,
-          hue: 200, // Ajuste conforme necessário
-          blocked: false // Defina como necessário para sua lógica
+          hue: 200, 
+          blocked: false
         });
         ipToNodeMap.set(entry.ip, nodeId);
       });
@@ -254,7 +254,7 @@ export default {
             source: sourceNode,
             target: targetNode,
             edgeWidth: 1,
-            hue: hues[Math.floor(Math.random() * hues.length)], // Ajuste conforme necessário
+            hue: hues[Math.floor(Math.random() * hues.length)], 
           });
         }
       });
@@ -273,7 +273,7 @@ export default {
       this.ips.forEach((ip, index) => {
         const nodeIndex = index + 1;
         const nodeName = `node${nodeIndex}`;
-        this.nodes[nodeName] = { name: ip, edgeWidth: 1, hue: 200, blocked: false }; // Inicializa com cor padrão (azul)
+        this.nodes[nodeName] = { name: ip, edgeWidth: 1, hue: 200, blocked: false }; 
       });
 
       this.packets.data.forEach((packet, index) => {
@@ -283,7 +283,6 @@ export default {
         const targetNodeName = `node${targetNodeIndex}`;
         const edgeName = `edge${index + 1}`;
 
-        // Adicionar checagem de anomalia
         if (packet.anomalias && packet.anomalias.length > 0) {
           this.nodes[sourceNodeName].hue = 0; // Define a cor para vermelho
           this.nodes[targetNodeName].hue = 0; // Define a cor para vermelho

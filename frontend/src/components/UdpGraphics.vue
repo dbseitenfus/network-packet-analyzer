@@ -18,14 +18,14 @@ export default {
   data() {
     return {
       chart: null,
-      protocolCountData: {},   // Dados de contagem de protocolos
-      protocolAnomalies: {},   // Anomalias por protocolo
-      protocolIPs: {},         // Endereços IP por protocolo
-      selectedProtocol: null   // Protocolo selecionado
+      protocolCountData: {},
+      protocolAnomalies: {}, 
+      protocolIPs: {},         
+     selectedProtocol: null 
     };
   },
   mounted() {
-    this.countProtocolTypes();  // Contagem dos tipos de protocolo ao montar o componente
+    this.countProtocolTypes();  
     window.addEventListener('resize', this.renderChart);
   },
   beforeUnmount() {

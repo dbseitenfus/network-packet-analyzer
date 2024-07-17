@@ -20,7 +20,6 @@ export default {
         }
       },
       deep: true,
-      immediate: true
     }
   },
   methods: {
@@ -109,6 +108,6 @@ export default {
 canvas {
   max-width: 100%;
   max-height: 100%;
-  margin: auto; /* Para centralizar o canvas */
+  margin: auto; 
 }
 </style>

@@ -28,7 +28,6 @@ export default {
         }
       },
       deep: true,
-      immediate: true
     }
   },
   methods: {
@@ -56,7 +55,10 @@ export default {
         y: event.metodo ? 'Requisição: ' + event.metodo + ' ' + event.uri : 'Resposta: ' + event.status
       }));
 
-      this.renderHttpSequenceChart(labels, dataPoints);
+      const ctx = this.$refs.httpSequenceChart.getContext('2d');
+      if (ctx) {
+        this.renderHttpSequenceChart(labels, dataPoints, ctx);
+      }
     },
 
     formatTimestamp(timestamp) {
@@ -64,95 +66,16 @@ export default {
       return `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()} ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`;
     },
 
-    generateHttpChartsData(pacotes) {
-      const methodCounts = {};
-      const statusCounts = {};
-
-      pacotes.forEach(packet => {
-        const method = packet.metodo;
-        if (method) {
-          if (!methodCounts[method]) {
-            methodCounts[method] = 0;
-          }
-          methodCounts[method]++;
-        }
-
-        const status = packet.status;
-        if (status) {
-          if (!statusCounts[status]) {
-            statusCounts[status] = 0;
-          }
-          statusCounts[status]++;
-        }
-      });
-
-      const methodLabels = Object.keys(methodCounts);
-      const methodData = Object.values(methodCounts);
-
-      const statusLabels = Object.keys(statusCounts);
-      const statusData = Object.values(statusCounts);
-
-      this.renderHttpBarCharts(methodLabels, methodData, statusLabels, statusData);
-    },
-
     generateHttpSizeHistogram(pacotes) {
       const sizes = pacotes.map(packet => packet.size);
 
-      this.renderHttpSizeHistogram(sizes);
+      const ctx = this.$refs.httpSizeHistogram.getContext('2d');
+      if (ctx) {
+        this.renderHttpSizeHistogram(sizes, ctx);
+      }
     },
 
-    renderHttpBarCharts(methodLabels, methodData, statusLabels, statusData) {
-      const methodCtx = this.$refs.httpMethodChart.getContext('2d');
-      new Chart(methodCtx, {
-        type: 'bar',
-        data: {
-          labels: methodLabels,
-          datasets: [{
-            label: 'Número de Requisições por Método HTTP',
-            data: methodData,
-            backgroundColor: 'rgba(75, 192, 192, 0.2)',
-            borderColor: 'rgba(75, 192, 192, 1)',
-            borderWidth: 1
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          scales: {
-            y: {
-              beginAtZero: true
-            }
-          }
-        }
-      });
-
-      const statusCtx = this.$refs.httpStatusChart.getContext('2d');
-      new Chart(statusCtx, {
-        type: 'bar',
-        data: {
-          labels: statusLabels,
-          datasets: [{
-            label: 'Número de Requisições por Código de Status HTTP',
-            data: statusData,
-            backgroundColor: 'rgba(255, 159, 64, 0.2)',
-            borderColor: 'rgba(255, 159, 64, 1)',
-            borderWidth: 1
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          scales: {
-            y: {
-              beginAtZero: true
-            }
-          }
-        }
-      });
-    },
-
-    renderHttpSequenceChart(labels, dataPoints) {
-      const ctx = this.$refs.httpSequenceChart.getContext('2d');
+    renderHttpSequenceChart(labels, dataPoints, ctx) {
       new Chart(ctx, {
         type: 'line',
         data: {
@@ -204,8 +127,7 @@ export default {
       });
     },
 
-    renderHttpSizeHistogram(sizes) {
-      const ctx = this.$refs.httpSizeHistogram.getContext('2d');
+    renderHttpSizeHistogram(sizes, ctx) {
       const binSize = 100; 
       const maxBin = Math.max(...sizes);
       const bins = Math.ceil(maxBin / binSize);
@@ -250,16 +172,16 @@ export default {
   width: 100%;
   height: 100%;
   display: flex;
-  flex-direction: column; /* Organiza os gráficos em coluna */
+  flex-direction: column; 
   justify-content: center;
   align-items: center;
 }
 
 .chart-container {
   width: 100%;
-  height: 400px; /* Ajuste a altura desejada para cada gráfico */
-  margin: 10px 0; /* Espaçamento entre os gráficos */
-  max-height: 50vh; /* Limita a altura máxima dos gráficos */
+  height: 400px; 
+  margin: 10px 0;
+  max-height: 50vh; 
 }
 
 canvas {
@@ -267,6 +189,6 @@ canvas {
   height: 100%;
   max-width: 100%;
   max-height: 100%;
-  margin: auto; /* Para centralizar o canvas */
+  margin: auto; 
 }
 </style>

@@ -40,7 +40,7 @@ export default {
 <style scoped>
 .http-details {
   width: 100%;
-  overflow-x: auto; /* Permitir rolagem horizontal se necessário */
+  overflow-x: auto;
 }
 
 table {

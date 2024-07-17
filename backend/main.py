@@ -441,3 +441,38 @@ async def listar_pacotes_dns(pcap_file: UploadFile = File(...)):
                     })
 
     return {"message": "Pacotes DNS processados com sucesso", "pacotes": pacotes_dns}
+
+@app.post("/http/listar_pacotes")
+async def listar_pacotes_http(pcap_file: UploadFile = File(...)):
+    global pacotes_http
+    pacotes_http = []
+    conteudo = await pcap_file.read()
+    captura = dpkt.pcap.Reader(io.BytesIO(conteudo))
+
+    for timestamp, buf in captura:
+        # Decodificar o pacote Ethernet
+        pacote_eth = dpkt.ethernet.Ethernet(buf)
+
+        # Verificar se o pacote é do tipo IP e TCP
+        if isinstance(pacote_eth.data, dpkt.ip.IP) and isinstance(pacote_eth.data.data, dpkt.tcp.TCP):
+            ip = pacote_eth.data
+            tcp = ip.data
+
+            # Verificar se o pacote é HTTP (portas 80 e 8080 são exemplos, pode adicionar mais)
+            if tcp.dport == 80 or tcp.sport == 80 or tcp.dport == 8080 or tcp.sport == 8080:
+                try:
+                    http = dpkt.http.Request(tcp.data)
+                    pacotes_http.append({
+                        "timestamp": timestamp,
+                        "ip_origem": dpkt.utils.inet_to_str(ip.src),
+                        "ip_destino": dpkt.utils.inet_to_str(ip.dst),
+                        "metodo": http.method,
+                        "uri": http.uri,
+                        "versao": http.version,
+                        "headers": dict(http.headers),
+                        "corpo": http.body.decode('utf-8', errors='ignore') if http.body else None
+                    })
+                except (dpkt.dpkt.NeedData, dpkt.dpkt.UnpackError):
+                    pass
+
+    return {"mensagem": "Pacotes HTTP processados com sucesso", "pacotes": pacotes_http}

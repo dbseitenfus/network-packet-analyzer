@@ -49,6 +49,9 @@
     <div v-if="packets.type == 2">
       <rip-graphics class="graph" :packets="packets" />
     </div>
+    <div v-if="packets.type == 5">
+      <dns-graphics class="graph" :packets="packets" />
+    </div>
     <div v-else class="graph-container">
       <network-graph class="graph" :packets="packets" />
     </div>
@@ -68,6 +71,7 @@ import UdpGraphics from './UdpGraphics.vue';
 import AnaliseTcp from './AnaliseTcp.vue';
 import DnsNodesTable from './DnsNodesTable.vue';
 import RipGraphics from './RipGraphics.vue';
+import DnsGraphics from './DnsGraphics.vue'
 
 export default {
   name: 'DashboardPackages',
@@ -84,7 +88,8 @@ export default {
     UdpGraphics,
     AnaliseTcp,
     DnsNodesTable,
-    RipGraphics
+    RipGraphics,
+    DnsGraphics
   },
   data() {
     return {
@@ -144,6 +149,8 @@ export default {
             this.packets.type = 2; // RIP 
             const response = await this.getRipPackets(formData);
             this.packets.data = response.data.pacotes;
+            this.showGraphButton = false; 
+            this.showInfoButton = false;
           } else if (protocolName === "udp") {
             this.packets.type = 3; // UDP
             const response = await this.getUdpPackets(formData);
@@ -223,6 +230,8 @@ export default {
         return "tcp";
       } else if (baseName.includes("dns")) {
         return "dns";
+      } else if (baseName.includes("http")) {
+        return "http"
       } else {
         throw new Error("Protocolo não identificado pelo nome do arquivo.");
       }

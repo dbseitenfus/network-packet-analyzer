@@ -444,21 +444,15 @@ async def listar_pacotes_dns(pcap_file: UploadFile = File(...)):
 
 @app.post("/http/listar_pacotes")
 async def listar_pacotes_http(pcap_file: UploadFile = File(...)):
-    global pacotes_http
     pacotes_http = []
     conteudo = await pcap_file.read()
     captura = dpkt.pcap.Reader(io.BytesIO(conteudo))
 
     for timestamp, buf in captura:
-        # Decodificar o pacote Ethernet
         pacote_eth = dpkt.ethernet.Ethernet(buf)
-
-        # Verificar se o pacote é do tipo IP e TCP
         if isinstance(pacote_eth.data, dpkt.ip.IP) and isinstance(pacote_eth.data.data, dpkt.tcp.TCP):
             ip = pacote_eth.data
             tcp = ip.data
-
-            # Verificar se o pacote é HTTP (portas 80 e 8080 são exemplos, pode adicionar mais)
             if tcp.dport == 80 or tcp.sport == 80 or tcp.dport == 8080 or tcp.sport == 8080:
                 try:
                     http = dpkt.http.Request(tcp.data)
@@ -470,7 +464,8 @@ async def listar_pacotes_http(pcap_file: UploadFile = File(...)):
                         "uri": http.uri,
                         "versao": http.version,
                         "headers": dict(http.headers),
-                        "corpo": http.body.decode('utf-8', errors='ignore') if http.body else None
+                        "corpo": http.body.decode('utf-8', errors='ignore') if http.body else None,
+                        "size": len(tcp.data)  # Tamanho da requisição HTTP
                     })
                 except (dpkt.dpkt.NeedData, dpkt.dpkt.UnpackError):
                     pass

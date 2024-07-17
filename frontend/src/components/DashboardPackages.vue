@@ -29,7 +29,7 @@
         <udp-nodes-table v-if="showInfoUDP" :udpNodes="packets.data" />
         <udp-graphics v-if="showGraphicsUDP" :udpNodes="packets.data" />
         <dns-nodes-table v-if="showInfoDNS" :dnsPackages="packets.data" />
-        
+        <http-table v-if="showInfoHttp" :requests="packets.data" />
       </div>
     </div>
 
@@ -52,6 +52,9 @@
     <div v-if="packets.type == 5">
       <dns-graphics class="graph" :packets="packets" />
     </div>
+    <div v-if="packets.type == 6">
+      <http-graphics class="graph" :packets="packets" />
+    </div>
     <div v-else class="graph-container">
       <network-graph class="graph" :packets="packets" />
     </div>
@@ -72,6 +75,8 @@ import AnaliseTcp from './AnaliseTcp.vue';
 import DnsNodesTable from './DnsNodesTable.vue';
 import RipGraphics from './RipGraphics.vue';
 import DnsGraphics from './DnsGraphics.vue'
+import HttpGraphics from './HttpGraphics.vue';
+import HttpTable from './HttpsTable.vue';
 
 export default {
   name: 'DashboardPackages',
@@ -89,7 +94,9 @@ export default {
     AnaliseTcp,
     DnsNodesTable,
     RipGraphics,
-    DnsGraphics
+    DnsGraphics,
+    HttpGraphics,
+    HttpTable
   },
   data() {
     return {
@@ -106,7 +113,8 @@ export default {
       showGraphicsUDP: false,
       showInfoRIP: false,
       showInfoUDP: false,
-      showInfoDNS: false
+      showInfoDNS: false,
+      showInfoHttp: false
     };
   },
   methods: {
@@ -167,7 +175,12 @@ export default {
           } else if (protocolName === "dns") {
             this.packets.type = 5; // DNS
             const response = await this.getDnsPackets(formData);
-            console.log(response)
+            this.packets.data = response.data.pacotes;
+            this.showGraphButton = false;
+            this.showInfoButton = true;
+          } else if (protocolName === "http") {
+            this.packets.type = 6; // HTTP
+            const response = await this.getHttpPackets(formData);
             this.packets.data = response.data.pacotes;
             this.showGraphButton = false;
             this.showInfoButton = true;
@@ -199,6 +212,8 @@ export default {
           this.showInfoUDP = true;
         } else if(this.packets.type === 5) {
           this.showInfoDNS = true;
+        } else if(this.packets.type == 6){
+          this.showInfoHttp = true;
         }
       }
     },
@@ -279,6 +294,14 @@ export default {
 
     async getDnsPackets(formData) {
       return await axios.post("http://localhost:8000/dns/listar_pacotes", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data"
+        }
+      });
+    },
+
+    async getHttpPackets(formData) {
+      return await axios.post("http://localhost:8000/http/listar_pacotes", formData, {
         headers: {
           "Content-Type": "multipart/form-data"
         }

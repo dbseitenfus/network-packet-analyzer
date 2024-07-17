@@ -10,6 +10,7 @@ from netaddr import EUI
 import struct
 from datetime import datetime, timedelta
 import random 
+from scapy.all import *
 
 app = FastAPI()
 
@@ -471,3 +472,34 @@ async def listar_pacotes_http(pcap_file: UploadFile = File(...)):
                     pass
 
     return {"mensagem": "Pacotes HTTP processados com sucesso", "pacotes": pacotes_http}
+
+@app.post("/snmp/listar_pacotes")
+async def listar_pacotes_snmp(pcap_file: UploadFile = File(...)):
+    pacotes_snmp = []
+
+    # Lê o conteúdo do arquivo pcap
+    conteudo = await pcap_file.read()
+
+    # Analisa o arquivo pcap usando o Scapy
+    pacotes = rdpcap(io.BytesIO(conteudo))
+
+    for pacote in pacotes:
+        # Verifica se é um pacote SNMP
+        if SNMP in pacote:
+            try:
+                # Extrai informações relevantes do pacote SNMP
+                pdu = pacote[SNMP].PDU
+                pdu_type = pdu.__class__.__name__  # Obtém o nome da classe da PDU SNMP
+                pacotes_snmp.append({
+                    "timestamp": float(pacote.time),
+                    "ip_origem": pacote[IP].src,
+                    "ip_destino": pacote[IP].dst,
+                    "versao": pacote[SNMP].version,
+                    "comunidade": str(pacote[SNMP].community),  # Converte a comunidade SNMP para string
+                    "comando": pdu_type,  # Tipo de PDU SNMP
+                    # Adicione mais campos conforme necessário
+                })
+            except Exception as e:
+                print(f"Erro ao processar pacote SNMP: {e}")
+
+    return {"mensagem": "Pacotes SNMP processados com sucesso", "pacotes": pacotes_snmp}

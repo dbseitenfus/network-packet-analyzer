@@ -3,16 +3,17 @@
     <!-- Gráfico de IP de Origem -->
     <div class="chart">
       <h2 class="chart-title">Ocorrências de IP de Origem</h2>
-      <canvas id="grafico-ip-origem"></canvas>
+      <canvas id="grafico-ip-origem" width="300px" height="200px"></canvas>
     </div>
 
     <!-- Gráfico de IP de Destino -->
     <div class="chart">
       <h2 class="chart-title">Ocorrências de IP de Destino</h2>
-      <canvas id="grafico-ip-destino"></canvas>
+      <canvas id="grafico-ip-destino" width="300px" height="200px"></canvas>
     </div>
   </div>
 </template>
+
 <script>
 import { Chart } from "chart.js";
 
@@ -134,11 +135,12 @@ export default {
 <style scoped>
 .chart-container {
   display: flex;
-  flex-direction: column; 
+  flex-direction: column;
 }
 
 .chart {
   margin-bottom: 50px;
+  width: 80%;
 }
 
 .chart-title {

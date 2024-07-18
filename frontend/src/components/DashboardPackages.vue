@@ -30,6 +30,7 @@
         <udp-graphics v-if="showGraphicsUDP" :udpNodes="packets.data" />
         <dns-nodes-table v-if="showInfoDNS" :dnsPackages="packets.data" />
         <http-table v-if="showInfoHttp" :requests="packets.data" />
+        <snmp-nodes-table v-if="showInfoSnmp" :snmpNodes="packets.data" />
       </div>
     </div>
 
@@ -55,6 +56,9 @@
     <div v-if="packets.type == 6">
       <http-graphics class="graph" :packets="packets" />
     </div>
+    <div v-if="packets.type == 7">
+      <snmp-graphics class="graph" :packets="packets" />
+    </div>
     <div v-else class="graph-container">
       <network-graph class="graph" :packets="packets" />
     </div>
@@ -77,6 +81,8 @@ import RipGraphics from './RipGraphics.vue';
 import DnsGraphics from './DnsGraphics.vue'
 import HttpGraphics from './HttpGraphics.vue';
 import HttpTable from './HttpsTable.vue';
+import SnmpGraphics from './SnmpGraphics.vue';
+import SnmpNodesTable from './SnmpNodesTable.vue';
 
 export default {
   name: 'DashboardPackages',
@@ -96,7 +102,9 @@ export default {
     RipGraphics,
     DnsGraphics,
     HttpGraphics,
-    HttpTable
+    HttpTable,
+    SnmpGraphics,
+    SnmpNodesTable
   },
   data() {
     return {
@@ -114,7 +122,8 @@ export default {
       showInfoRIP: false,
       showInfoUDP: false,
       showInfoDNS: false,
-      showInfoHttp: false
+      showInfoHttp: false,
+      showInfoSnmp: false
     };
   },
   methods: {
@@ -184,6 +193,13 @@ export default {
             this.packets.data = response.data.pacotes;
             this.showGraphButton = false;
             this.showInfoButton = true;
+          } else if (protocolName === "snmp") {
+            this.packets.type = 7; // SNMP
+            const response = await this.getSnmpPackets(formData);
+            this.packets.data = response.data.pacotes;
+            console.log(this.packets)
+            this.showGraphButton = false;
+            this.showInfoButton = true;
           } else {
             throw new Error("Protocolo não suportado: " + protocolName);
           }
@@ -214,6 +230,8 @@ export default {
           this.showInfoDNS = true;
         } else if(this.packets.type == 6){
           this.showInfoHttp = true;
+        } else if(this.packets.type == 7) {
+          this.showInfoSnmp = true;
         }
       }
     },
@@ -225,6 +243,7 @@ export default {
       this.showGraphicsUDP = false;
       this.showInfoRIP = false;
       this.showInfoUDP = false;
+      this.showInfoSnmp = false;
     },
 
     getFileExtension(fileName) {
@@ -247,6 +266,8 @@ export default {
         return "dns";
       } else if (baseName.includes("http")) {
         return "http"
+      } else if (baseName.includes("snmp")) {
+        return "snmp"
       } else {
         throw new Error("Protocolo não identificado pelo nome do arquivo.");
       }
@@ -302,6 +323,14 @@ export default {
 
     async getHttpPackets(formData) {
       return await axios.post("http://localhost:8000/http/listar_pacotes", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data"
+        }
+      });
+    },
+
+    async getSnmpPackets(formData) {
+      return await axios.post("http://localhost:8000/snmp/listar_pacotes", formData, {
         headers: {
           "Content-Type": "multipart/form-data"
         }

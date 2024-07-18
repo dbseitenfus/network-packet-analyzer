@@ -9,6 +9,11 @@
     <div class="chart-wrapper">
       <canvas ref="snmpLatencyChart" class="chart"></canvas>
     </div>
+
+    <!-- Gráfico de pizza para tipos de comandos SNMP -->
+    <div class="chart-wrapper">
+      <canvas ref="snmpCommandPieChart" class="chart"></canvas>
+    </div>
   </div>
 </template>
 
@@ -25,6 +30,7 @@ export default {
         if (newPackets && newPackets.data.length > 0) {
           this.generateSnmpCountChartData(newPackets.data);
           this.generateSnmpLatencyChartData(newPackets.data);
+          this.generateSnmpCommandPieChartData(newPackets.data);
         }
       },
       deep: true,
@@ -119,6 +125,55 @@ export default {
               }
             }
           }
+        }
+      });
+    },
+    generateSnmpCommandPieChartData(packets) {
+      let commandCounts = {};
+
+      packets.forEach(packet => {
+        if (commandCounts[packet.comando]) {
+          commandCounts[packet.comando]++;
+        } else {
+          commandCounts[packet.comando] = 1;
+        }
+      });
+
+      let labels = Object.keys(commandCounts);
+      let data = Object.values(commandCounts);
+
+      this.renderSnmpCommandPieChart(labels, data, this.$refs.snmpCommandPieChart.getContext('2d'));
+    },
+    renderSnmpCommandPieChart(labels, data, ctx) {
+      new Chart(ctx, {
+        type: 'pie',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'SNMP Command Distribution',
+            data: data,
+            backgroundColor: [
+              'rgba(255, 99, 132, 0.2)',
+              'rgba(54, 162, 235, 0.2)',
+              'rgba(255, 206, 86, 0.2)',
+              'rgba(75, 192, 192, 0.2)',
+              'rgba(153, 102, 255, 0.2)',
+              'rgba(255, 159, 64, 0.2)'
+            ],
+            borderColor: [
+              'rgba(255, 99, 132, 1)',
+              'rgba(54, 162, 235, 1)',
+              'rgba(255, 206, 86, 1)',
+              'rgba(75, 192, 192, 1)',
+              'rgba(153, 102, 255, 1)',
+              'rgba(255, 159, 64, 1)'
+            ],
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false
         }
       });
     }

@@ -1,92 +1,81 @@
 <template>
   <div class="dns-graphics">
-    <canvas ref="dnsQueriesPieChart"></canvas>
+    <h2>Distribuição de Consultas DNS por Tipo de Consulta</h2>
+    <PieChart
+      v-for="(chartData, index) in groupedData"
+      :key="index"
+      :chartData="chartData"
+      :title="chartData.title"
+    />
   </div>
 </template>
 
 <script>
-import Chart from 'chart.js/auto';
+import PieChart from './PieChart.vue';
 
 export default {
   name: 'DnsGraphics',
+  components: {
+    PieChart
+  },
   props: {
     packets: Object
+  },
+  data() {
+    return {
+      groupedData: []
+    };
   },
   watch: {
     packets: {
       handler(newPackets) {
         if (newPackets && newPackets.data && newPackets.data.length > 0) {
-          this.renderPieChart(newPackets.data);
+          this.groupPackets(newPackets.data);
         }
       },
       deep: true,
     }
   },
   methods: {
-    renderPieChart(packets) {
-      const canvas = this.$refs.dnsQueriesPieChart;
-      if (!canvas) return;
+    groupPackets(packets) {
+      const serverTypeGroups = {
+        Authoritative: {},
+        Recursive: {},
+        'Recursion Desired': {}
+      };
 
-      const ctx = canvas.getContext('2d');
-
-      // Contagem de tipos únicos de consultas DNS
-      const queryCounts = {};
       packets.forEach(packet => {
-        packet.queries.forEach(query => {
-          const key = `${query.name}_${query.type}_${query.cls}`;
-          if (!queryCounts[key]) {
-            queryCounts[key] = {
-              label: `${query.name} (${query.type})`,
-              count: 0,
-              color: this.generateRandomColor()
-            };
+        packet.server_type.forEach(type => {
+          if (serverTypeGroups[type] !== undefined) {
+            packet.queries.forEach(query => {
+              const queryName = query.name;
+              if (!serverTypeGroups[type][queryName]) {
+                serverTypeGroups[type][queryName] = 0;
+              }
+              serverTypeGroups[type][queryName]++;
+            });
           }
-          queryCounts[key].count++;
         });
       });
 
-      const labels = [];
-      const data = [];
-      const backgroundColors = [];
+      this.groupedData = Object.keys(serverTypeGroups).reduce((acc, type) => {
+        const labels = Object.keys(serverTypeGroups[type]);
+        const data = Object.values(serverTypeGroups[type]);
 
-      // Montando os dados para o gráfico de pizza
-      Object.keys(queryCounts).forEach(key => {
-        labels.push(queryCounts[key].label);
-        data.push(queryCounts[key].count);
-        backgroundColors.push(queryCounts[key].color);
-      });
-
-      new Chart(ctx, {
-        type: 'pie',
-        data: {
-          labels: labels,
-          datasets: [{
-            label: 'Distribuição de Consultas DNS',
-            data: data,
-            backgroundColor: backgroundColors,
-            borderColor: backgroundColors.map(color => color.replace('0.6', '1')), // Ajustando a transparência para a borda
-            borderWidth: 1
-          }]
-        },
-        options: {
-          responsive: true,
-          plugins: {
-            legend: {
-              position: 'top',
-            },
-            tooltip: {
-              callbacks: {
-                label: function(tooltipItem) {
-                  return `${tooltipItem.label}: ${tooltipItem.raw}`;
-                }
-              }
-            }
-          }
+        // Verifica se há dados antes de adicionar ao acc
+        if (data.some(count => count > 0)) {
+          const colors = labels.map(() => this.generateRandomColor());
+          acc.push({
+            title: `${type} DNS Queries`,
+            labels,
+            data,
+            colors
+          });
         }
-      });
+        return acc;
+      }, []);
     },
     generateRandomColor() {
-      // Função para gerar uma cor aleatória em formato RGBA
       const r = Math.floor(Math.random() * 256);
       const g = Math.floor(Math.random() * 256);
       const b = Math.floor(Math.random() * 256);
@@ -98,16 +87,14 @@ export default {
 
 <style scoped>
 .dns-graphics {
-  width: 100vw;
-  height: 100vh;
+  width: 100%;
   display: flex;
-  justify-content: center;
-  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-start;
 }
 
-canvas {
-  max-width: 100%;
-  max-height: 100%;
-  margin: auto; 
+h2 {
+  width: 100%;
+  text-align: center;
 }
 </style>

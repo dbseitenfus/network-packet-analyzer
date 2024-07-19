@@ -1,12 +1,15 @@
 <template>
   <div class="dns-graphics">
     <h2>Distribuição de Consultas DNS por Tipo de Consulta</h2>
-    <PieChart
-      v-for="(chartData, index) in groupedData"
-      :key="index"
-      :chartData="chartData"
-      :title="chartData.title"
-    />
+    <div class="charts-container">
+      <PieChart
+        v-for="(chartData, index) in groupedData"
+        :key="index"
+        :chartData="chartData"
+        :title="chartData.title"
+        class="pie-chart"
+      />
+    </div>
   </div>
 </template>
 
@@ -30,6 +33,7 @@ export default {
     packets: {
       handler(newPackets) {
         if (newPackets && newPackets.data && newPackets.data.length > 0) {
+          console.log(newPackets.data)
           this.groupPackets(newPackets.data);
         }
       },
@@ -90,11 +94,24 @@ export default {
   width: 100%;
   display: flex;
   flex-wrap: wrap;
-  justify-content: flex-start;
+  justify-content: center;
+  text-align: center;
 }
 
 h2 {
   width: 100%;
   text-align: center;
+}
+
+.charts-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.pie-chart {
+  margin: 10px;  
+  max-width: 500px;
+  width: 100%;
 }
 </style>

@@ -1,9 +1,7 @@
 <template>
   <div class="http-sequence">
     <div class="chart-container">
-      <canvas ref="httpSequenceChart"></canvas>
-    </div>
-    <div class="chart-container">
+      <h3>Distribuição do Tamanho das Requisições HTTP</h3>
       <canvas ref="httpSizeHistogram"></canvas>
     </div>
   </div>
@@ -16,14 +14,13 @@ export default {
   props: {
     packets: {
       type: Object,
-      default: () => ({ data: [] }) 
+      default: () => ({ data: [] })
     }
   },
   watch: {
     packets: {
       handler(newPackets) {
         if (newPackets && newPackets.data && newPackets.data.length > 0) {
-          this.generateHttpSequenceData(newPackets.data);
           this.generateHttpSizeHistogram(newPackets.data);
         }
       },
@@ -31,28 +28,23 @@ export default {
     }
   },
   methods: {
-    generateHttpSequenceData(pacotes) {
-      const events = [];
-
-      pacotes.forEach(packet => {
-        const event = {
-          timestamp: packet.timestamp,
-          ipOrigem: packet.ip_origem,
-          ipDestino: packet.ip_destino,
-          metodo: packet.metodo,
-          uri: packet.uri,
-          versao: packet.versao,
-          status: packet.status
-        };
-        events.push(event);
-      });
+    generateHttpSequenceData(packets) {
+      const events = packets.map(packet => ({
+        timestamp: packet.timestamp,
+        ipOrigem: packet.ip_origem,
+        ipDestino: packet.ip_destino,
+        metodo: packet.metodo,
+        uri: packet.uri,
+        versao: packet.versao,
+        status: packet.status
+      }));
 
       events.sort((a, b) => a.timestamp - b.timestamp);
 
       const labels = events.map(event => this.formatTimestamp(event.timestamp));
       const dataPoints = events.map(event => ({
         x: this.formatTimestamp(event.timestamp),
-        y: event.metodo ? 'Requisição: ' + event.metodo + ' ' + event.uri : 'Resposta: ' + event.status
+        y: `${event.metodo ? 'Requisição: ' + event.metodo + ' ' + event.uri : 'Resposta: ' + event.status}`
       }));
 
       const ctx = this.$refs.httpSequenceChart.getContext('2d');
@@ -66,8 +58,8 @@ export default {
       return `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()} ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`;
     },
 
-    generateHttpSizeHistogram(pacotes) {
-      const sizes = pacotes.map(packet => packet.size);
+    generateHttpSizeHistogram(packets) {
+      const sizes = packets.map(packet => packet.size);
 
       const ctx = this.$refs.httpSizeHistogram.getContext('2d');
       if (ctx) {
@@ -82,10 +74,10 @@ export default {
           labels: labels,
           datasets: [{
             label: 'Sequência de Interações HTTP',
-            data: dataPoints.map(point => ({ x: labels.indexOf(point.x), y: point.y })),
+            data: dataPoints,
             backgroundColor: 'rgba(54, 162, 235, 0.2)',
             borderColor: 'rgba(54, 162, 235, 1)',
-            borderWidth: 1,
+            borderWidth: 2,
             fill: false,
             tension: 0.1
           }]
@@ -102,7 +94,6 @@ export default {
               }
             },
             y: {
-              beginAtZero: true,
               title: {
                 display: true,
                 text: 'Evento'
@@ -128,7 +119,7 @@ export default {
     },
 
     renderHttpSizeHistogram(sizes, ctx) {
-      const binSize = 100; 
+      const binSize = 100;
       const maxBin = Math.max(...sizes);
       const bins = Math.ceil(maxBin / binSize);
       const histogramData = new Array(bins).fill(0);
@@ -156,7 +147,17 @@ export default {
           responsive: true,
           maintainAspectRatio: false,
           scales: {
+            x: {
+              title: {
+                display: true,
+                text: 'Tamanho (bytes)'
+              }
+            },
             y: {
+              title: {
+                display: true,
+                text: 'Número de Requisições'
+              },
               beginAtZero: true
             }
           }
@@ -173,22 +174,23 @@ export default {
   height: 100%;
   display: flex;
   flex-direction: column; 
-  justify-content: center;
   align-items: center;
 }
 
 .chart-container {
   width: 100%;
-  height: 400px; 
-  margin: 10px 0;
-  max-height: 50vh; 
+  max-width: 800px;
+  height: 400px;
+  margin: 20px 0;
+}
+
+h3 {
+  text-align: center;
+  margin-bottom: 10px;
 }
 
 canvas {
-  width: 100%;
-  height: 100%;
-  max-width: 100%;
-  max-height: 100%;
-  margin: auto; 
+  width: 100% !important;
+  height: 100% !important;
 }
 </style>

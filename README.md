@@ -4,7 +4,7 @@
 
 ### Executando o frontend
 
-1. Acesse a pasta `./frontend`:
+1. Acesse a pasta `frontend`:
     ```bash
     cd ./frontend
     ```
@@ -28,7 +28,7 @@
 
 ### Executando o backend
 
-1. Acesse o diretório `./backend`:
+1. Acesse o diretório `backend`:
     ```bash
     cd ./backend
     ```

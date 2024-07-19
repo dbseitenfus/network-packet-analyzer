@@ -42,3 +42,8 @@
     ```bash
     uvicorn main:app
     ```
+
+### Utilizando o projeto
+
+1. Para escolher os arquivos deve-se utilizar o botão de upload.
+2. Deve-se escolher os arquivos que estão na pasta "data"

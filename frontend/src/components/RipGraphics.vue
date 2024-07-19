@@ -83,6 +83,7 @@ export default {
       if (this.metricChart) {
         this.metricChart.data.labels = metrics.timestamps;
         this.metricChart.data.datasets[0].data = metrics.values;
+        this.metricChart.data.datasets[0].backgroundColor = metrics.colors;
         this.metricChart.update();
       } else {
         const ctx = this.$refs.metricChart.getContext('2d');
@@ -93,7 +94,7 @@ export default {
             datasets: [{
               label: 'Métrica de Rotas ao Longo do Tempo',
               data: metrics.values,
-              backgroundColor: 'rgba(75, 192, 192, 0.5)',
+              backgroundColor: metrics.colors,
               borderColor: 'rgba(75, 192, 192, 1)',
               borderWidth: 1
             }]
@@ -129,15 +130,17 @@ export default {
     countMetrics(packets) {
       const timestamps = [];
       const values = [];
+      const colors = [];
 
       packets.data.forEach(packet => {
         packet.entries.forEach(entry => {
           timestamps.push(new Date(packet.timestamp * 1000).toLocaleTimeString());
           values.push(entry.metric);
+          colors.push(entry.metric === 16 ? 'rgba(255, 99, 132, 0.5)' : 'rgba(75, 192, 192, 0.5)');
         });
       });
 
-      return { timestamps, values };
+      return { timestamps, values, colors };
     },
 
   }

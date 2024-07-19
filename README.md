@@ -42,5 +42,3 @@
     ```bash
     uvicorn main:app
     ```
-
-**Nota:** Substitua `requirements.txt` pelo nome do arquivo correto que contém as dependências do projeto, se necessário.

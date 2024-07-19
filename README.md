@@ -3,21 +3,44 @@
 ## Frontend
 
 ### Executando o frontend
-- Acesse a pasta ./frontend e execute:
+
+1. Acesse a pasta `./frontend`:
     ```bash
-    $ npm install
-    $ npm run serve
+    cd ./frontend
+    ```
+
+2. Instale as dependências:
+    ```bash
+    npm install
+    ```
+
+3. Inicie o servidor de desenvolvimento:
+    ```bash
+    npm run serve
     ```
 
 ## Backend
 
-- Instale o Python (pip)
+### Pré-requisitos
+
+- Certifique-se de ter o Python instalado.
+- Instale o gerenciador de pacotes `pip`.
 
 ### Executando o backend
 
-- Acesse o diretório ./backend e execute:
+1. Acesse o diretório `./backend`:
     ```bash
-    $ pip install
-    $ uvicorn main:app
+    cd ./backend
     ```
 
+2. Instale as dependências:
+    ```bash
+    pip install -r requirements.txt
+    ```
+
+3. Inicie o servidor utilizando `uvicorn`:
+    ```bash
+    uvicorn main:app
+    ```
+
+**Nota:** Substitua `requirements.txt` pelo nome do arquivo correto que contém as dependências do projeto, se necessário.

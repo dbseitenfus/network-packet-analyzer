@@ -430,6 +430,17 @@ async def listar_pacotes_dns(pcap_file: UploadFile = File(...)):
                             "rdata": rdata
                         })
 
+                    # Determinar o tipo de servidor
+                    server_type = []
+                    if dns.qr == dpkt.dns.DNS_R:  # Resposta
+                        if dns.op & dpkt.dns.DNS_AA:
+                            server_type.append("Authoritative")
+                        if dns.op & dpkt.dns.DNS_RA:
+                            server_type.append("Recursive")
+                    else:  # Solicitação
+                        if dns.op & dpkt.dns.DNS_RD:
+                            server_type.append("Recursion Desired")
+
                     pacotes_dns.append({
                         "timestamp": timestamp,
                         "source_ip": dpkt.utils.inet_to_str(ip.src),
@@ -438,7 +449,8 @@ async def listar_pacotes_dns(pcap_file: UploadFile = File(...)):
                         "answers": answers,
                         "opcode": dns.opcode,
                         "rcode": dns.rcode,
-                        "id": dns.id
+                        "id": dns.id,
+                        "server_type": server_type
                     })
 
     return {"message": "Pacotes DNS processados com sucesso", "pacotes": pacotes_dns}

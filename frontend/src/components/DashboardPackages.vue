@@ -10,7 +10,9 @@
     </label>
 
     <!-- Botão para mostrar informações -->
-    <label for="showInfoBtn" class="float-button-top btn-floating-top info-button" v-if="showInfoButton">
+    <label for="showInfoBtn" class="float-button-top btn-floating-top info-button" 
+           :style="{'top': showGraphButton ? '80px' : '20px'}"
+           v-if="showInfoButton">
       <div class="icon-container" @click="mostrarModalGraficos('info')">
         <n-icon size="24">
           <information-circle/>
